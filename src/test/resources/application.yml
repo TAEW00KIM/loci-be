@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb" # 테스트용 인메모리 DB
+    driverClassName: org.h2.Driver
+    username: sa
+    password: "" # 비밀번호 없음
+
+  # (선택 사항) JPA를 사용하는 경우, H2 콘솔 활성화
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 테스트 실행 시 스키마 생성, 완료 시 삭제
+  h2:
+    console:
+      enabled: true
