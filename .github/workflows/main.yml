@@ -23,13 +23,13 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
-      # 4. .jar 파일 원본 이름 그대로 EC2로 전송
+      # 4. .jar 파일 EC2로 전송 (파일 이름 하드코딩)
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
 
         working-directory: build/libs/
 
-        with:
+        with: # 'with:' 블록은 한 칸 더 들여쓰기
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
