@@ -50,9 +50,9 @@ config
 .env
 
 # Application properties (local, dev 등 민감 정보 포함)
-application-local.properties
-application-dev.properties
-application-prod.properties
+application-local.yml
+application-dev.yml
+application-prod.yml
 
 # ==================================
 # OS (Mac, Windows)

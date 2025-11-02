@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: fiv5
+
+  profiles:
+    active: local
