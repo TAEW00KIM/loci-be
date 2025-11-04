@@ -19,7 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login/apple")
-    public ResponseEntity<CustomResponse<AuthResponse>> loginWithApple(@RequestBody AppleLoginRequest request) {
+    public ResponseEntity<CustomResponse<AuthResponse>> loginWithApple(@RequestBody AppleLoginRequest request) { // ◀◀ 2. 반환 타입 AuthResponse
         AuthResponse authResponse = authService.loginWithApple(request);
         return ResponseEntity.ok(CustomResponse.ok(authResponse));
     }
