@@ -7,11 +7,14 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@JsonPropertyOrder({"isSuccess", "code", "message", "result"})
+@JsonPropertyOrder({"timestamp", "isSuccess", "code", "message", "result"})
 public class CustomResponse<T> {
 
+    private final LocalDateTime timestamp = LocalDateTime.now();
     private final Boolean isSuccess;
     private final String code;
     private final String message;
