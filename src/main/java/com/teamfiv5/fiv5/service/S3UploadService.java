@@ -24,9 +24,8 @@ public class S3UploadService {
     // (자동 주입) 'spring-cloud-aws-starter-s3'가 S3Client Bean을 자동으로 생성해 줍니다.
     private final S3Client s3Client;
 
-    @Value("${spring.cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket:fiv5-assets}")
     private String bucket;
-
     /**
      * 파일을 S3에 업로드하고, 생성된 URL을 반환합니다.
      * @param file 업로드할 파일
