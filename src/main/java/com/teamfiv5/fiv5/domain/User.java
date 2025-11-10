@@ -45,6 +45,9 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
+    @Column(name = "bluetooth_token", unique = true)
+    private String bluetoothToken;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -67,6 +70,10 @@ public class User {
 
     public void updateProfileUrl(String profileUrl) {
         this.profileUrl = profileUrl;
+    }
+
+    public void updateBluetoothToken(String bluetoothToken) {
+        this.bluetoothToken = bluetoothToken;
     }
 
     public void withdraw() {
