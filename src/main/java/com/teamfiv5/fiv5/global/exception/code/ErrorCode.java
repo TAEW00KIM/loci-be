@@ -25,7 +25,15 @@ public enum ErrorCode implements BaseErrorCode {
 
     // == S3 관련 에러 ==
     FILE_IS_EMPTY("FILE400_1", "업로드할 파일이 비어있습니다.", HttpStatus.BAD_REQUEST),
-    S3_UPLOAD_FAILED("S3500_1", "S3 파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    S3_UPLOAD_FAILED("S3500_1", "S3 파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
+
+    // == 친구 관련 에러 ==
+    SELF_FRIEND_REQUEST("FRIEND400_1", "자기 자신에게 친구 요청을 보낼 수 없습니다.", HttpStatus.BAD_REQUEST),
+    FRIEND_REQUEST_ALREADY_EXISTS("FRIEND409_1", "이미 친구 관계이거나 요청 대기 중입니다.", HttpStatus.CONFLICT),
+    FRIEND_REQUEST_NOT_FOUND("FRIEND404_1", "존재하지 않는 친구 요청입니다.", HttpStatus.NOT_FOUND),
+
+    INVALID_TARGET_TOKEN("FRIEND404_2", "유효하지 않은 토큰이거나 만료된 사용자입니다.", HttpStatus.NOT_FOUND);
 
 
     private final String code;

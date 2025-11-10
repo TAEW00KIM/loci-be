@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -18,6 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final S3UploadService s3UploadService;
+    private static final SecureRandom random = new SecureRandom();
 
     // 공용: 사용자 ID로 User 엔티티 조회 (없으면 예외)
     private User findUserById(Long userId) {
