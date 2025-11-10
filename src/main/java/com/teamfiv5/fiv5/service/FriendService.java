@@ -4,6 +4,7 @@ import com.teamfiv5.fiv5.domain.Friendship;
 import com.teamfiv5.fiv5.domain.FriendshipStatus;
 import com.teamfiv5.fiv5.domain.User;
 import com.teamfiv5.fiv5.dto.FriendDto;
+import com.teamfiv5.fiv5.dto.UserDto;
 import com.teamfiv5.fiv5.global.exception.CustomException;
 import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.repository.FriendshipRepository;
@@ -162,5 +163,71 @@ public class FriendService {
                 .orElseThrow(() -> new CustomException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
         friendship.accept();
+    }
+
+    /**
+     * (신규 API 6) 내가 받은 친구 요청 목록 조회
+     * * @param myUserId (로그인한 유저, 즉 '수신자(receiver)')
+     * @return 나에게 요청을 보낸 사람들(requester)의 프로필 목록
+     */
+    public List<UserDto.UserResponse> getReceivedFriendRequests(Long myUserId) {
+        // 1. 내가 '수신자(receiver)'이고 상태가 'PENDING'인 모든 요청을 조회
+        List<Friendship> pendingRequests = friendshipRepository.findByReceiverIdAndStatus(
+                myUserId,
+                FriendshipStatus.PENDING
+        );
+
+        // 2. Friendship 목록에서 '요청자(requester)'의 User 정보만 추출
+        return pendingRequests.stream()
+                .map(Friendship::getRequester) // (Friendship -> User)
+                .map(UserDto.UserResponse::from) // (User -> UserDto.UserResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * (신규 API 7) 내가 보낸 친구 요청 목록 조회
+     * * @param myUserId (로그인한 유저, 즉 '요청자(requester)')
+     * @return 내가 요청을 보낸 사람들(receiver)의 프로필 목록
+     */
+    public List<UserDto.UserResponse> getSentFriendRequests(Long myUserId) {
+        // 1. 내가 '요청자(requester)'이고 상태가 'PENDING'인 모든 요청을 조회
+        List<Friendship> sentRequests = friendshipRepository.findByRequesterIdAndStatus(
+                myUserId,
+                FriendshipStatus.PENDING
+        );
+
+        // 2. Friendship 목록에서 '수신자(receiver)'의 User 정보만 추출
+        return sentRequests.stream()
+                .map(Friendship::getReceiver) // (Friendship -> User)
+                .map(UserDto.UserResponse::from) // (User -> UserDto.UserResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * (신규 API 8) 내 친구 목록 조회
+     * * @param myUserId
+     * @return 나와 'FRIENDSHIP' 상태인 사람들의 프로필 목록
+     */
+    public List<UserDto.UserResponse> getMyFriends(Long myUserId) {
+        // 1. 내가 포함된(A든 B든) 'FRIENDSHIP' 상태인 모든 관계 조회
+        List<Friendship> friendships = friendshipRepository.findAllFriends(
+                myUserId,
+                FriendshipStatus.FRIENDSHIP
+        );
+
+        // 2. 상대방의 User 정보만 추출
+        return friendships.stream()
+                .map(f -> {
+                    // 내가 요청자(requester)면 상대방(receiver)을 반환
+                    if (f.getRequester().getId().equals(myUserId)) {
+                        return f.getReceiver();
+                    }
+                    // 내가 수신자(receiver)면 상대방(requester)을 반환
+                    else {
+                        return f.getRequester();
+                    }
+                })
+                .map(UserDto.UserResponse::from)
+                .collect(Collectors.toList());
     }
 }
