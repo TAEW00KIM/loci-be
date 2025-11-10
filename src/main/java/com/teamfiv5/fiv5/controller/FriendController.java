@@ -1,6 +1,7 @@
 package com.teamfiv5.fiv5.controller;
 
 import com.teamfiv5.fiv5.dto.FriendDto;
+import com.teamfiv5.fiv5.dto.UserDto;
 import com.teamfiv5.fiv5.global.exception.CustomException;
 import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.global.response.CustomResponse;
@@ -159,5 +160,41 @@ public class FriendController {
         Long myUserId = getUserId(user); // 나는 수신자
         friendService.acceptFriend(myUserId, request.getTargetUserId()); // 상대는 요청자
         return ResponseEntity.ok(CustomResponse.ok(null));
+    }
+
+    /**
+     * (신규 API 6) 내가 받은 친구 요청 목록 조회
+     */
+    @Operation(summary = "[친구] 6. 내가 받은 친구 요청 목록 조회",
+            description = "나에게 친구 요청을 보냈지만 아직 수락/거절하지 않은 (PENDING) 사용자 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공. (요청이 없으면 빈 리스트 `[]` 반환)",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class),
+                            examples = @ExampleObject(value = """
+                            {
+                              "code": "COMMON200",
+                              "result": [
+                                {
+                                  "id": 1,
+                                  "nickname": "행복한쿼카",
+                                  "bio": "안녕하세요",
+                                  "profileUrl": "https://.../image.png",
+                                  "email": "user@apple.com",
+                                  "provider": "apple",
+                                  "providerId": "001234.abc...",
+                                  "createdAt": "2025-11-01T12:00:00"
+                                }
+                              ]
+                            }
+                            """))),
+            @ApiResponse(responseCode = "401", description = "(COMMON401) 인증 실패", content = @Content)
+    })
+    @GetMapping("/requests/received") // (신규) GET /api/v1/friends/requests/received
+    public ResponseEntity<CustomResponse<List<UserDto.UserResponse>>> getReceivedFriendRequests(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        Long myUserId = getUserId(user);
+        List<UserDto.UserResponse> requesters = friendService.getReceivedFriendRequests(myUserId);
+        return ResponseEntity.ok(CustomResponse.ok(requesters));
     }
 }

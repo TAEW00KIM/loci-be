@@ -59,12 +59,9 @@ public class S3UploadService {
      */
     @Transactional
     public void replaceUrl(String newFileUrl, String oldFileUrl) {
-        // (중요) 기존 파일(oldFileUrl)이 있었고, 새 파일(newFileUrl)과 다르다면
+        // 기존 파일(oldFileUrl)이 있었고, 새 파일(newFileUrl)과 다르다면
         if (oldFileUrl != null && (newFileUrl == null || !oldFileUrl.equals(newFileUrl))) {
-            // (참고) 이 로직은 프론트가 S3에서 직접 삭제했다는 가정 하에,
-            // 백엔드는 S3에서 delete를 호출하지 *않습니다*.
-            // 만약 백엔드도 삭제해야 한다면 this.delete(oldFileUrl); 호출
-            System.out.println("기존 S3 파일 삭제 필요(로직상 스킵): " + oldFileUrl);
+            this.delete(oldFileUrl);
         }
     }
 

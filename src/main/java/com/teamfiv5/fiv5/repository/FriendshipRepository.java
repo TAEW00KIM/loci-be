@@ -22,4 +22,18 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             Long receiverId,
             FriendshipStatus status
     );
+
+    List<Friendship> findByReceiverIdAndStatus(Long receiverId, FriendshipStatus status);
+
+    // (신규 1) 내가 '요청한(requester)' PENDING 상태인 요청 목록
+    List<Friendship> findByRequesterIdAndStatus(Long requesterId, FriendshipStatus status);
+
+    // (신규 2) 내가 포함된 'FRIENDSHIP' 상태인 모든 관계 (내가 A든 B든)
+    @Query("SELECT f FROM Friendship f " +
+            "WHERE (f.requester.id = :userId OR f.receiver.id = :userId) " +
+            "AND f.status = :status")
+    List<Friendship> findAllFriends(
+            @Param("userId") Long userId,
+            @Param("status") FriendshipStatus status
+    );
 }
