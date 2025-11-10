@@ -25,12 +25,12 @@ public class Friendship {
 
     // 요청 보낸 사람
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id", nullable = false)
+    @JoinColumn(name = "requester_id")
     private User requester;
 
     // 요청 받은 사람
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
+    @JoinColumn(name = "receiver_id")
     private User receiver;
 
     @Enumerated(EnumType.STRING)

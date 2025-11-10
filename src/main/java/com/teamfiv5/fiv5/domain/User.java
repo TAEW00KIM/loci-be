@@ -41,10 +41,6 @@ public class User {
     @Column(nullable = false)
     private String providerId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserStatus status;
-
     @Column(name = "bluetooth_token", unique = true)
     private String bluetoothToken;
 
@@ -59,7 +55,6 @@ public class User {
         this.profileUrl = profileUrl;
         this.provider = provider;
         this.providerId = providerId;
-        this.status = UserStatus.ACTIVE;
         this.bio = null;
     }
 
@@ -74,14 +69,5 @@ public class User {
 
     public void updateBluetoothToken(String bluetoothToken) {
         this.bluetoothToken = bluetoothToken;
-    }
-
-    public void withdraw() {
-        this.email = null;
-        this.nickname = "탈퇴한사용자_" + this.id;
-        this.profileUrl = null;
-        this.bio = null; // ◀◀ (추가)
-        this.providerId = "DELETED_" + this.providerId; // (필수) providerId 중복 방지
-        this.status = UserStatus.DELETED;
     }
 }

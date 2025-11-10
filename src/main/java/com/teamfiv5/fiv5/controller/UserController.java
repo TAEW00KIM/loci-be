@@ -210,17 +210,22 @@ public class UserController {
     /**
      * 회원 탈퇴 (Soft Delete)
      */
-    @Operation(summary = "회원 탈퇴 (Soft Delete)", description = "현재 로그인한 사용자의 계정을 탈퇴 처리(Soft Delete)합니다.")
+    @Operation(summary = "회원 탈퇴 (Hard Delete)",
+            description = "현재 로그인한 사용자의 계정을 DB에서 **완전히 삭제(Hard Delete)**합니다. 이 유저를 참조하던 `friendships` 등은 `ON DELETE SET NULL` 정책에 따라 `null`로 변경됩니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "탈퇴 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
+            @ApiResponse(responseCode = "200", description = "탈퇴 성공 (DB에서 삭제됨)", content = @Content(
+                    examples = @ExampleObject(value = """
+                            { "timestamp": "...", "isSuccess": true, "code": "COMMON200", "message": "성공적으로 요청을 수행했습니다.", "result": null }
+                            """)
+            )),
+            @ApiResponse(responseCode = "401", description = "(COMMON401) 인증되지 않은 사용자", content = @Content)
     })
     @DeleteMapping("/me")
     public ResponseEntity<CustomResponse<Void>> withdrawUser(
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         Long userId = getUserId(user);
-        userService.withdrawUser(userId);
+        userService.withdrawUser(userId); // Hard Delete 실행
         return ResponseEntity.ok(CustomResponse.ok(null)); // 탈퇴는 null 반환
     }
 }
