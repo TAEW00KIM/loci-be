@@ -1,5 +1,6 @@
 package com.teamfiv5.fiv5.config;
 
+import com.teamfiv5.fiv5.config.jwt.CustomAuthenticationEntryPoint;
 import com.teamfiv5.fiv5.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     private static final String[] SWAGGER_URL_PATTERNS = {
             "/swagger-ui/**",
@@ -57,7 +59,7 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // (2) 경로별 권한 설정 (수정)
+        // (2) 경로별 권한 설정 
         http
                 .authorizeHttpRequests(auth -> auth
                         // /health, /api/v1/auth/**, Swagger 경로는 인증 없이 허용
@@ -68,9 +70,13 @@ public class SecurityConfig {
                         .requestMatchers(SWAGGER_URL_PATTERNS).permitAll() // (추가)
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated());
-        // (3) JWT 필터 추가 (유지)
+        // (3) JWT 필터 추가
         http
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                );
 
         return http.build();
     }
