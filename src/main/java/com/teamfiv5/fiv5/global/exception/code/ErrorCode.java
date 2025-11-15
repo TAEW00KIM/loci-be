@@ -33,7 +33,15 @@ public enum ErrorCode implements BaseErrorCode {
     FRIEND_REQUEST_ALREADY_EXISTS("FRIEND409_1", "이미 친구 관계이거나 요청 대기 중입니다.", HttpStatus.CONFLICT),
     FRIEND_REQUEST_NOT_FOUND("FRIEND404_1", "존재하지 않는 친구 요청입니다.", HttpStatus.NOT_FOUND),
 
-    INVALID_TARGET_TOKEN("FRIEND404_2", "유효하지 않은 토큰이거나 만료된 사용자입니다.", HttpStatus.NOT_FOUND);
+    INVALID_TARGET_TOKEN("FRIEND404_2", "유효하지 않은 토큰이거나 만료된 사용자입니다.", HttpStatus.NOT_FOUND),
+
+    // == 포스트 관련 에러 ==
+    POST_NOT_FOUND("POST404_1", "게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    NOT_POST_AUTHOR("POST403_1", "게시물에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
+    // == 방명록 관련 에러 ==
+    SELF_GUESTBOOK_ENTRY("GUESTBOOK400_1", "자신의 방명록에 글을 쓸 수 없습니다.", HttpStatus.BAD_REQUEST),
+    GUESTBOOK_ENTRY_NOT_FOUND("GUESTBOOK404_1", "방명록을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
 
     private final String code;

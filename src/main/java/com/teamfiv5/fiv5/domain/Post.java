@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -27,11 +29,11 @@ public class Post extends BaseTimeEntity {
     private String contents;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("sortOrder ASC") // 순서
+    @OrderBy("sortOrder ASC")
     private List<PostMedia> mediaList = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostCollaborator> collaborators = new ArrayList<>();
+    private Set<PostCollaborator> collaborators = new HashSet<>();
 
     @Builder
     public Post(User user, String contents) {

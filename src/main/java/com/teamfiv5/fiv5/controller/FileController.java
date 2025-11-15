@@ -25,9 +25,6 @@ public class FileController {
 
     private final S3UploadService s3UploadService;
 
-    /**
-     * (신규) 범용 파일 업로드 API
-     */
     @Operation(summary = "범용 파일 업로드 (S3)",
             description = "파일(MultipartFile)과 저장할 디렉토리(directory)를 보내면 S3에 업로드하고, S3 URL을 즉시 반환합니다. (DB 저장 X)")
     @ApiResponses(value = {
@@ -53,7 +50,6 @@ public class FileController {
             @Schema(description = "업로드할 파일 (MultipartFile)", type = "string", format = "binary", required = true)
             @RequestPart("file") MultipartFile file
     ) {
-        // S3UploadService의 upload 메서드를 직접 호출
         String fileUrl = s3UploadService.upload(file, directory);
 
         return ResponseEntity.ok(CustomResponse.ok(new FileDto.FileUploadResponse(fileUrl)));

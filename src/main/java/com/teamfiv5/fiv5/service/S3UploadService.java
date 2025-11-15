@@ -1,4 +1,3 @@
-// 경로: src/main/java/com/teamfiv5/fiv5/service/S3UploadService.java
 package com.teamfiv5.fiv5.service;
 
 import com.teamfiv5.fiv5.global.exception.CustomException;
@@ -23,55 +22,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class S3UploadService {
 
-    // (자동 주입) 'spring-cloud-aws-starter-s3'가 S3Client Bean을 자동으로 생성해 줍니다.
     private final S3Client s3Client;
 
     @Value("${spring.cloud.aws.s3.bucket:fiv5-assets}")
     private String bucket;
 
-    /**
-     * * @param newFile    새로 업로드할 파일 (null이나 empty면 "삭제"로 간주)
-     * @param oldFileUrl DB에 저장되어 있던 기존 파일 URL (삭제 대상)
-     * @param dirName    S3 디렉토리 (예: "profiles", "posts")
-     * @return S3에 저장된 새 파일의 URL (삭제된 경우 null)
-     */
     @Transactional
     public String uploadAndReplace(MultipartFile newFile, String oldFileUrl, String dirName) {
         String newFileUrl = null;
 
-        // 1. (변경/추가) 새 파일이 들어온 경우
         if (newFile != null && !newFile.isEmpty()) {
-            newFileUrl = this.upload(newFile, dirName); // (내부 upload 메서드 호출)
+            newFileUrl = this.upload(newFile, dirName);
         }
-        // 2. (삭제) 새 파일이 안 들어온 경우 -> null (삭제)
 
-        // 3. (중요) 기존 파일(oldFileUrl)이 있었고, 새 파일과 URL이 다르다면
-        //    (새 URL이 null로(삭제) 변경되었거나, 새 URL이 기존과 다를 때)
         if (oldFileUrl != null && (newFileUrl == null || !oldFileUrl.equals(newFileUrl))) {
-            this.delete(oldFileUrl); // (내부 delete 메서드 호출)
+            this.delete(oldFileUrl);
         }
 
-        return newFileUrl; // DB에 저장할 최종 URL 반환
+        return newFileUrl;
     }
 
-    /**
-     * * @param newFileUrl 프론트가 제공한 새 S3 URL
-     * @param oldFileUrl DB에 저장되어 있던 기존 파일 URL (삭제 대상)
-     */
     @Transactional
     public void replaceUrl(String newFileUrl, String oldFileUrl) {
-        // 기존 파일(oldFileUrl)이 있었고, 새 파일(newFileUrl)과 다르다면
         if (oldFileUrl != null && (newFileUrl == null || !oldFileUrl.equals(newFileUrl))) {
             this.delete(oldFileUrl);
         }
     }
 
-    /**
-     * 파일을 S3에 업로드하고, 생성된 URL을 반환합니다.
-     * @param file 업로드할 파일
-     * @param dirName 버킷 내의 디렉토리 이름 (예: "profiles")
-     * @return S3에 업로드된 파일의 전체 URL
-     */
     public String upload(MultipartFile file, String dirName) {
         if (file == null || file.isEmpty()) {
             throw new CustomException(ErrorCode.FILE_IS_EMPTY);
@@ -81,15 +58,14 @@ public class S3UploadService {
                 .filter(name -> !name.isBlank())
                 .orElseThrow(() -> new IllegalArgumentException("파일 이름이 없습니다."));
 
-        // 파일 이름 중복 방지를 위해 UUID 사용
         String uniqueName = UUID.randomUUID() + "_" + original.replaceAll("[^a-zA-Z0-9.\\-]", "_");
-        String key = dirName + "/" + uniqueName; // S3 내 최종 경로 (예: profiles/uuid_image.jpg)
+        String key = dirName + "/" + uniqueName;
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .contentType(file.getContentType())
-                .cacheControl("public, max-age=31536000") // 1년간 캐시
+                .cacheControl("public, max-age=31536000")
                 .build();
 
         try {
@@ -99,39 +75,30 @@ public class S3UploadService {
             throw new CustomException(ErrorCode.S3_UPLOAD_FAILED);
         }
 
-        // 업로드된 파일의 URL 반환
         return s3Client.utilities().getUrl(builder -> builder.bucket(bucket).key(key)).toString();
     }
 
-    /**
-     * S3에서 파일을 삭제합니다.
-     * (수정) URL에서 S3 'key'를 추출하는 로직을 버그 수정
-     * @param fileUrl 삭제할 파일의 전체 URL
-     */
     public void delete(String fileUrl) {
         if (fileUrl == null || fileUrl.isBlank()) {
             return;
         }
 
         try {
-            // (수정) URL 객체를 사용하여 'key'를 안전하게 추출
             URL url = new URL(fileUrl);
-            String key = url.getPath(); // 예: "/profiles/uuid_image.jpg"
+            String key = url.getPath();
 
-            // 맨 앞의 '/' 제거
             if (key.startsWith("/")) {
-                key = key.substring(1); // "profiles/uuid_image.jpg"
+                key = key.substring(1);
             }
 
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(bucket)
-                    .key(key) // 올바른 key 값
+                    .key(key)
                     .build();
 
             s3Client.deleteObject(deleteObjectRequest);
 
         } catch (Exception e) {
-            // 삭제 실패 시 로그만 남김
             System.err.println("S3 파일 삭제 실패: " + fileUrl + " (" + e.getMessage() + ")");
         }
     }

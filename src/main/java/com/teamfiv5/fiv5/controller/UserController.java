@@ -33,7 +33,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // (공통) 로그인한 사용자 ID 가져오기 (예외 처리 포함)
     private Long getUserId(AuthenticatedUser user) {
         if (user == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
@@ -41,9 +40,6 @@ public class UserController {
         return user.getUserId();
     }
 
-    /**
-     * 5. 로그인한 유저 확인 API (GET /me)
-     */
     @Operation(summary = "내 정보 조회 (로그인 유저 확인)",
             description = "현재 로그인한 사용자의 전체 프로필 정보를 조회합니다. 프론트엔드가 로그인 직후 토큰을 검증하고 사용자 정보를 가져오기 위해 사용합니다.")
     @ApiResponses(value = {
@@ -78,9 +74,6 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(myInfo));
     }
 
-    /**
-     * 3. 닉네임 + 프로필 메시지(bio) 수정 (patchUser)
-     */
     @Operation(summary = "닉네임 및 프로필 메시지 수정 (patchUser)", description = "현재 로그인한 사용자의 닉네임과 bio를 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공",
@@ -123,10 +116,6 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    /**
-     * 3. 프로필 사진 URL 변경/삭제 (patchProfile)
-     * (수정) 4. 스웨거 어노테이션 수정
-     */
     @Operation(summary = "프로필 사진 업로드/변경/삭제 (patchProfile)",
             description = "프로필 사진(이미지 파일)을 업로드합니다. **파일을 보내지 않으면(null)** 기존 사진이 **삭제**됩니다.")
     @ApiResponses(value = {
@@ -168,9 +157,6 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    /**
-     * (신규) 4. 프로필 사진 [URL] 변경/삭제 (JSON)
-     */
     @Operation(summary = "프로필 사진 [URL] 변경/삭제 (신규 방식)",
             description = "클라이언트가 S3에 직접 업로드한 후, 그 S3 URL 문자열만 서버로 전송합니다. **URL로 null이나 빈 문자열(\"\")을 보내면** 기존 사진이 **삭제**됩니다.")
     @ApiResponses(value = {
@@ -207,9 +193,6 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    /**
-     * 회원 탈퇴 (Soft Delete)
-     */
     @Operation(summary = "회원 탈퇴 (Soft Delete)",
             description = "현재 로그인한 사용자의 계정을 탈퇴 처리(Soft Delete)합니다. (DB 레코드 유지)")
     @ApiResponses(value = {
