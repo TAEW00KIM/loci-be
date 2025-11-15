@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set; 
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,13 +52,19 @@ public class PostService {
             });
         }
 
-        if (request.getCollaboratorIds() != null) {
-            request.getCollaboratorIds().forEach(collaboratorId -> {
-                User collaboratorUser = findUserById(collaboratorId);
-                post.addCollaborator(PostCollaborator.builder()
-                        .user(collaboratorUser)
-                        .build());
-            });
+        if (request.getCollaboratorIds() != null && !request.getCollaboratorIds().isEmpty()) {
+            Set<Long> collaboratorIds = new HashSet<>(request.getCollaboratorIds());
+            List<User> collaboratorUsers = userRepository.findAllById(collaboratorIds);
+
+            if (collaboratorUsers.size() != collaboratorIds.size()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+
+            collaboratorUsers.forEach(collaboratorUser ->
+                    post.addCollaborator(PostCollaborator.builder()
+                            .user(collaboratorUser)
+                            .build())
+            );
         }
 
         Post savedPost = postRepository.save(post);
@@ -110,15 +118,23 @@ public class PostService {
         }
 
         post.clearCollaborators();
-        if (request.getCollaboratorIds() != null) {
-            request.getCollaboratorIds().forEach(collaboratorId -> {
-                User collaboratorUser = findUserById(collaboratorId);
-                post.addCollaborator(PostCollaborator.builder()
-                        .user(collaboratorUser)
-                        .build());
-            });
+
+        if (request.getCollaboratorIds() != null && !request.getCollaboratorIds().isEmpty()) {
+            Set<Long> collaboratorIds = new HashSet<>(request.getCollaboratorIds());
+            List<User> collaboratorUsers = userRepository.findAllById(collaboratorIds);
+
+            if (collaboratorUsers.size() != collaboratorIds.size()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+
+            collaboratorUsers.forEach(collaboratorUser ->
+                    post.addCollaborator(PostCollaborator.builder()
+                            .user(collaboratorUser)
+                            .build())
+            );
         }
 
+        // (6. 리뷰 3번 유지) DTO 변환 시점 N+1 방지를 위해 fetch join 쿼리 재실행
         return PostDto.PostDetailResponse.from(findPostById(post.getId()));
     }
 }
