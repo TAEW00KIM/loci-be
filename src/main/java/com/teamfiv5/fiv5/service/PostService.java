@@ -88,5 +88,37 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    // TODO: 포스트 수정(Update) 로직 추가
+    @Transactional
+    public PostDto.PostDetailResponse updatePost(Long currentUserId, Long postId, PostDto.PostCreateRequest request) {
+        Post post = findPostById(postId);
+
+        if (!post.getUser().getId().equals(currentUserId)) {
+            throw new CustomException(ErrorCode.NOT_POST_AUTHOR);
+        }
+
+        post.updateContents(request.getContents());
+
+        post.clearMedia();
+        if (request.getMediaList() != null) {
+            request.getMediaList().forEach(mediaReq -> {
+                post.addMedia(PostMedia.builder()
+                        .mediaUrl(mediaReq.getMediaUrl())
+                        .mediaType(mediaReq.getMediaType())
+                        .sortOrder(mediaReq.getSortOrder())
+                        .build());
+            });
+        }
+
+        post.clearCollaborators();
+        if (request.getCollaboratorIds() != null) {
+            request.getCollaboratorIds().forEach(collaboratorId -> {
+                User collaboratorUser = findUserById(collaboratorId);
+                post.addCollaborator(PostCollaborator.builder()
+                        .user(collaboratorUser)
+                        .build());
+            });
+        }
+
+        return PostDto.PostDetailResponse.from(findPostById(post.getId()));
+    }
 }

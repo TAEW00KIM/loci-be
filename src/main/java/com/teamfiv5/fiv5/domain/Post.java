@@ -50,4 +50,16 @@ public class Post extends BaseTimeEntity {
         this.collaborators.add(collaborator);
         collaborator.setPost(this);
     }
+
+    public void updateContents(String contents) {
+        this.contents = contents;
+    }
+
+    public void clearMedia() {
+        this.mediaList.clear();
+    }
+
+    public void clearCollaborators() {
+        this.collaborators.clear();
+    }
 }

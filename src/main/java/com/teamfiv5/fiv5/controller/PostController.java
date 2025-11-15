@@ -132,4 +132,44 @@ public class PostController {
         postService.deletePost(currentUserId, postId);
         return ResponseEntity.ok(CustomResponse.ok(null));
     }
+
+    @Operation(summary = "[Post] 5. 포스트 수정",
+            description = "특정 포스트의 내용을 수정합니다. (작성자 본인만 가능)")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "수정할 포스트 내용, 미디어 목록, 공동 작업자 ID 목록. (Post 1. 생성 DTO와 동일)",
+            required = true,
+            content = @Content(examples = @ExampleObject(value = """
+                    {
+                      "contents": "수정된 내용",
+                      "mediaList": [
+                        {
+                          "mediaUrl": "https://fiv5-assets.s3.../new_image.png",
+                          "mediaType": "IMAGE",
+                          "sortOrder": 1
+                        }
+                      ],
+                      "collaboratorIds": [2, 4]
+                    }
+                    """))
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class),
+                            examples = @ExampleObject(value = """
+                                    { "code": "COMMON200", "result": { "id": 1, "contents": "수정된 내용", ... } }
+                                    """))),
+            @ApiResponse(responseCode = "401", description = "(COMMON401) 인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "(POST403_1) 포스트 작성자가 아님", content = @Content),
+            @ApiResponse(responseCode = "404", description = "(POST404_1) 포스트를 찾을 수 없음 / (USER404_1) 공동 작업자 ID로 유저를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/{postId}")
+    public ResponseEntity<CustomResponse<PostDto.PostDetailResponse>> updatePost(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long postId,
+            @Valid @RequestBody PostDto.PostCreateRequest request
+    ) {
+        Long currentUserId = getUserId(user);
+        PostDto.PostDetailResponse response = postService.updatePost(currentUserId, postId, request);
+        return ResponseEntity.ok(CustomResponse.ok(response));
+    }
 }
