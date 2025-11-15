@@ -23,8 +23,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Tag(name = "User", description = "사용자 프로필 정보 API")
 @RestController
 @RequestMapping("/api/v1/users")
@@ -40,7 +38,7 @@ public class UserController {
         return user.getUserId();
     }
 
-    @Operation(summary = "내 정보 조회 (로그인 유저 확인)",
+    @Operation(summary = "[User] 1. 내 정보 조회 (로그인 유저 확인)",
             description = "현재 로그인한 사용자의 전체 프로필 정보를 조회합니다. 프론트엔드가 로그인 직후 토큰을 검증하고 사용자 정보를 가져오기 위해 사용합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -74,7 +72,8 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(myInfo));
     }
 
-    @Operation(summary = "닉네임 및 프로필 메시지 수정 (patchUser)", description = "현재 로그인한 사용자의 닉네임과 bio를 수정합니다.")
+    @Operation(summary = "[User] 2. 닉네임 및 프로필 메시지 수정 (patchUser)",
+            description = "현재 로그인한 사용자의 닉네임과 bio를 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공",
                     content = @Content(schema = @Schema(implementation = CustomResponse.class),
@@ -96,7 +95,7 @@ public class UserController {
                                }
                              }
                              """))),
-            @ApiResponse(responseCode = "400", description = "닉네임 중복",
+            @ApiResponse(responseCode = "400", description = "(AUTH409_1) 닉네임 중복",
                     content = @Content(schema = @Schema(implementation = CustomResponse.class),
                             examples = @ExampleObject(value = "{\"timestamp\": \"2025-11-04T21:02:00.123456\", \"isSuccess\": false, \"code\": \"AUTH409_1\", \"message\": \"이미 사용 중인 닉네임입니다.\", \"result\": null}"))),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
@@ -116,7 +115,7 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    @Operation(summary = "프로필 사진 업로드/변경/삭제 (patchProfile)",
+    @Operation(summary = "[User] 3. 프로필 사진 업로드/변경/삭제 (patchProfile)",
             description = "프로필 사진(이미지 파일)을 업로드합니다. **파일을 보내지 않으면(null)** 기존 사진이 **삭제**됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정/삭제 성공",
@@ -157,7 +156,7 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    @Operation(summary = "프로필 사진 [URL] 변경/삭제 (신규 방식)",
+    @Operation(summary = "[User] 4. 프로필 사진 [URL] 변경/삭제 (신규 방식)",
             description = "클라이언트가 S3에 직접 업로드한 후, 그 S3 URL 문자열만 서버로 전송합니다. **URL로 null이나 빈 문자열(\"\")을 보내면** 기존 사진이 **삭제**됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 변경/삭제 성공",
@@ -193,7 +192,7 @@ public class UserController {
         return ResponseEntity.ok(CustomResponse.ok(updatedUser));
     }
 
-    @Operation(summary = "회원 탈퇴 (Soft Delete)",
+    @Operation(summary = "[User] 5. 회원 탈퇴 (Soft Delete)",
             description = "현재 로그인한 사용자의 계정을 탈퇴 처리(Soft Delete)합니다. (DB 레코드 유지)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "탈퇴 성공 (Soft Delete)", content = @Content(/* ... */)),

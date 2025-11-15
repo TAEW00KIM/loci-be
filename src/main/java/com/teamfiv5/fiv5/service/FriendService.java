@@ -38,7 +38,7 @@ public class FriendService {
         String token = user.getBluetoothToken();
 
         if (token == null) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            throw new CustomException(ErrorCode.BLUETOOTH_TOKEN_NOT_ISSUED);
         }
 
         return new FriendDto.DiscoveryTokenResponse(token);

@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class) // 2. JPA Auditing 활성화
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseTimeEntity {
 
-    @CreatedDate // 3. 엔티티 생성 시 자동 저장
+    @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate // 4. 엔티티 수정 시 자동 저장
+    @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 }

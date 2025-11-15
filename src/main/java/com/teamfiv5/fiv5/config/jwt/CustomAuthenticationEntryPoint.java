@@ -24,15 +24,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
 
-        // 401 에러 코드를 ErrorCode에서 가져옵니다.
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
-        // 응답 상태를 401 (Unauthorized)로 설정
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        // 응답 본문을 CustomResponse 형식으로 작성
         String jsonResponse = objectMapper.writeValueAsString(CustomResponse.onFailure(errorCode));
         response.getWriter().write(jsonResponse);
     }

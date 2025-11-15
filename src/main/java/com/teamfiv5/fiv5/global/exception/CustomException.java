@@ -13,7 +13,6 @@ public class CustomException extends RuntimeException {
         this.code = errorCode;
     }
 
-    // (선택) 원인이 되는 Exception을 함께 로깅할 때
     public CustomException(BaseErrorCode errorCode, Throwable cause) {
         super(errorCode.getMessage(), cause);
         this.code = errorCode;

@@ -20,7 +20,6 @@ public class CustomResponse<T> {
     private final String message;
     private final T result;
 
-    // 200 OK
     public static <T> CustomResponse<T> ok(T result) {
         return new CustomResponse<>(
                 true,
@@ -30,7 +29,6 @@ public class CustomResponse<T> {
         );
     }
 
-    // 201 CREATED
     public static <T> CustomResponse<T> created(T result) {
         return new CustomResponse<>(
                 true,
@@ -40,7 +38,6 @@ public class CustomResponse<T> {
         );
     }
 
-    // 실패 응답 (데이터 없음)
     public static <T> CustomResponse<T> onFailure(BaseErrorCode code) {
         return new CustomResponse<>(
                 false,

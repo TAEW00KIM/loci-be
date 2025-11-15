@@ -1,17 +1,16 @@
-// 경로: src/main/java/com/teamfiv5/fiv5/config/jwt/JwtTokenProvider.java
 package com.teamfiv5.fiv5.config.jwt;
 
 import com.teamfiv5.fiv5.domain.User;
-// ◀◀ 1. (추가) AuthenticatedUser import
 import com.teamfiv5.fiv5.global.security.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority; // ◀◀ (추가)
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +18,10 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Collection; // ◀◀ (추가)
+import java.util.Collection;
 
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private final SecretKey key;
@@ -50,7 +50,7 @@ public class JwtTokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = getClaims(token); // private getClaims(token) 메서드 사용
+        Claims claims = getClaims(token);
 
         Long userId = Long.parseLong(claims.getSubject());
         String email = claims.get("email", String.class);
@@ -75,13 +75,12 @@ public class JwtTokenProvider {
                 .getBody();
     }
 
-    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             getClaims(token);
             return true;
         } catch (Exception e) {
-            // Log.error("Invalid JWT token: {}", e.getMessage());
+            log.error("Invalid JWT token: {}", e.getMessage());
             return false;
         }
     }

@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "friendships", uniqueConstraints = {
-        // A가 B에게 보낸 요청은 유일해야 함 (중복 요청 방지)
         @UniqueConstraint(columnNames = {"requester_id", "receiver_id"})
 })
 public class Friendship {
@@ -23,13 +22,12 @@ public class Friendship {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 요청 보낸 사람
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id", nullable = false) // (복구) nullable = false
+    @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false) // (복구) nullable = false
+    @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
     @Enumerated(EnumType.STRING)

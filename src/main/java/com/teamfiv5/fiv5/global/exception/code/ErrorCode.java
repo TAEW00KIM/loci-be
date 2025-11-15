@@ -1,4 +1,3 @@
-// 경로: src/main/java/com/teamfiv5/fiv5/global/exception/code/ErrorCode.java
 package com.teamfiv5.fiv5.global.exception.code;
 
 import lombok.AllArgsConstructor;
@@ -22,6 +21,7 @@ public enum ErrorCode implements BaseErrorCode {
 
     // == User 관련 에러 ==
     USER_NOT_FOUND("USER404_1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    BLUETOOTH_TOKEN_NOT_ISSUED("USER404_2", "블루투스 토큰이 발급되지 않았습니다.", HttpStatus.NOT_FOUND),
 
     // == S3 관련 에러 ==
     FILE_IS_EMPTY("FILE400_1", "업로드할 파일이 비어있습니다.", HttpStatus.BAD_REQUEST),

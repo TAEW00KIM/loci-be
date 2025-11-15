@@ -19,21 +19,19 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
-        // API 정보
         Info info = new Info()
                 .title("Fiv5 API Document")
                 .version("v1.0.0")
                 .description("Fiv5 프로젝트 API 명세서");
 
-        // JWT 인증 스키마 설정
         String jwtSchemeName = "jwtAuth";
         SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwtSchemeName);
         Components components = new Components()
                 .addSecuritySchemes(jwtSchemeName, new SecurityScheme()
                         .name(jwtSchemeName)
-                        .type(SecurityScheme.Type.HTTP) // HTTP 방식
+                        .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
-                        .bearerFormat("JWT")); // Bearer 토큰 포맷
+                        .bearerFormat("JWT"));
 
         return new OpenAPI()
                 .info(info)

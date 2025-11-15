@@ -33,7 +33,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 프론트엔드 개발 서버 주소 (예: localhost:3000, localhost:5173 등)
         configuration.setAllowedOrigins(List.of(
                 "https://api-dev.fiv5.app",
                 "http://localhost:8080",
@@ -43,10 +42,10 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization")); // (선택) JWT 헤더 노출
+        configuration.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 이 설정 적용
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
@@ -59,18 +58,14 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // (2) 경로별 권한 설정
         http
                 .authorizeHttpRequests(auth -> auth
-                        // /health, /api/v1/auth/**, Swagger 경로는 인증 없이 허용
                         .requestMatchers(
                                 "/health",
                                 "/api/v1/auth/**"
                         ).permitAll()
-                        .requestMatchers(SWAGGER_URL_PATTERNS).permitAll() // (추가)
-                        // 나머지 모든 요청은 인증 필요
+                        .requestMatchers(SWAGGER_URL_PATTERNS).permitAll()
                         .anyRequest().authenticated());
-        // (3) JWT 필터 추가
         http
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
