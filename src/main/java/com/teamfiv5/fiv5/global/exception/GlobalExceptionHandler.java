@@ -5,6 +5,8 @@ import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.global.response.CustomResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -20,6 +22,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(code.getHttpStatus())
                 .body(CustomResponse.onFailure(code));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<CustomResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+
+        BaseErrorCode code = ErrorCode.INVALID_REQUEST;
+
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .findFirst()
+                .orElse(code.getMessage());
+
+        log.warn("[InvalidRequest]: {}", errorMessage);
+
+        return ResponseEntity
+                .status(code.getHttpStatus())
+                .body(CustomResponse.onFailure(code, errorMessage));
     }
 
     @ExceptionHandler(Exception.class)

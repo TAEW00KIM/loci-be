@@ -46,4 +46,13 @@ public class CustomResponse<T> {
                 null
         );
     }
+
+    public static <T> CustomResponse<T> onFailure(BaseErrorCode code, String message) {
+        return new CustomResponse<>(
+                false,
+                code.getCode(),
+                message,
+                null
+        );
+    }
 }
