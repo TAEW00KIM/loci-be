@@ -53,6 +53,8 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3'
 
     implementation 'com.google.firebase:firebase-admin:9.3.0'
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 tasks.named('test') {

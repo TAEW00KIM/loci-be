@@ -11,6 +11,7 @@ import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.global.util.RandomNicknameGenerator;
 import com.teamfiv5.fiv5.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,6 +21,7 @@ import java.util.HexFormat;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -86,7 +88,8 @@ public class AuthService {
         try {
             return FirebaseAuth.getInstance().createCustomToken(uid);
         } catch (FirebaseAuthException e) {
-            throw new RuntimeException("Firebase 커스텀 토큰 생성 실패", e);
+            log.error("Firebase 커스텀 토큰 생성 실패 - userId: {}", userId, e);
+            throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED, e);
         }
     }
 

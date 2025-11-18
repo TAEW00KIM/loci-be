@@ -41,35 +41,54 @@ public class ChatService {
         User receiver = findUserById(receiverId);
 
         String roomId = Math.min(senderId, receiverId) + "_" + Math.max(senderId, receiverId);
-        DocumentReference roomRef = firestore.collection("chat_rooms").document(roomId);
 
+        Map<String, Object> messageData = createMessageData(senderId, messageText);
+
+        addMessageToFirestore(roomId, messageData);
+
+        updateRoomSummary(roomId, sender, receiver, messageData);
+
+        sendFcmForMessage(receiver, sender.getNickname(), messageText);
+    }
+
+    private Map<String, Object> createMessageData(Long senderId, String messageText) {
         Map<String, Object> messageData = new HashMap<>();
         messageData.put("senderId", senderId);
         messageData.put("text", messageText);
         messageData.put("timestamp", FieldValue.serverTimestamp());
+        return messageData;
+    }
 
-        roomRef.collection("messages").add(messageData);
+    private void addMessageToFirestore(String roomId, Map<String, Object> messageData) {
+        firestore.collection("chat_rooms").document(roomId)
+                .collection("messages").add(messageData);
+    }
+
+    private void updateRoomSummary(String roomId, User sender, User receiver, Map<String, Object> messageData) {
+        DocumentReference roomRef = firestore.collection("chat_rooms").document(roomId);
 
         Map<String, Object> roomUpdate = new HashMap<>();
         roomUpdate.put("lastMessage", messageData);
         roomUpdate.put("updatedAt", FieldValue.serverTimestamp());
-        roomUpdate.put("unreadCount." + String.valueOf(receiverId), FieldValue.increment(1));
+        roomUpdate.put("unreadCount." + String.valueOf(receiver.getId()), FieldValue.increment(1));
 
-        roomUpdate.put("participants", List.of(senderId, receiverId));
-        roomUpdate.put("participantInfo." + senderId,
+        roomUpdate.put("participants", List.of(sender.getId(), receiver.getId()));
+        roomUpdate.put("participantInfo." + sender.getId(),
                 Map.of("nickname", sender.getNickname(), "profileUrl", sender.getProfileUrl() != null ? sender.getProfileUrl() : "")
         );
-        roomUpdate.put("participantInfo." + receiverId,
+        roomUpdate.put("participantInfo." + receiver.getId(),
                 Map.of("nickname", receiver.getNickname(), "profileUrl", receiver.getProfileUrl() != null ? receiver.getProfileUrl() : "")
         );
 
         roomRef.set(roomUpdate, SetOptions.merge());
+    }
 
+    private void sendFcmForMessage(User receiver, String senderNickname, String messageText) {
         String receiverFcmToken = receiver.getFcmToken();
         if (StringUtils.hasText(receiverFcmToken)) {
             notificationService.sendDirectMessageNotification(
                     receiverFcmToken,
-                    sender.getNickname(),
+                    senderNickname,
                     messageText
             );
         }
