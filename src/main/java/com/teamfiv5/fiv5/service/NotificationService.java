@@ -27,7 +27,6 @@ public class NotificationService {
                             .build())
                     .setApnsConfig(ApnsConfig.builder()
                             .setAps(Aps.builder()
-                                    // (5) .setAlert() 빌더는 여기서 사용 X
                                     .setSound("default")
                                     .setContentAvailable(true)
                                     .build())

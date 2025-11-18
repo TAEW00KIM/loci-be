@@ -43,7 +43,10 @@ public enum ErrorCode implements BaseErrorCode {
 
     // == 방명록 관련 에러 ==
     SELF_GUESTBOOK_ENTRY("GUESTBOOK400_1", "자신의 방명록에 글을 쓸 수 없습니다.", HttpStatus.BAD_REQUEST),
-    GUESTBOOK_ENTRY_NOT_FOUND("GUESTBOOK404_1", "방명록을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    GUESTBOOK_ENTRY_NOT_FOUND("GUESTBOOK404_1", "방명록을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // == 채팅 관련 에러 ==
+    CHAT_ROOM_LIST_FAILED("CHAT500_1", "채팅방 목록을 불러오는 데 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
 
     private final String code;

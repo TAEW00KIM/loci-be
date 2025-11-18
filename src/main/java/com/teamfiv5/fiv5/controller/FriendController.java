@@ -151,7 +151,7 @@ public class FriendController {
                             examples = @ExampleObject(value = """
                                     { "code": "COMMON200", "result": null }
                                     """))),
-            @ApiResponse(responseCode = "404", description = "(FRIEND404_1) 거절할 요청이 존재하지 않음",
+            @ApiResponse(responseCode = "404", description = "(FRIEND404_1) 존재하지 않는 친구 요청입니다.",
                     content = @Content(schema = @Schema(implementation = CustomResponse.class),
                             examples = @ExampleObject(value = """
                                     {
