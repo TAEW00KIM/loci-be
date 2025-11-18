@@ -9,18 +9,20 @@ import com.teamfiv5.fiv5.global.exception.CustomException;
 import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatService {
 
     private final Firestore firestore;
@@ -73,50 +75,80 @@ public class ChatService {
         }
     }
 
-    public List<ChatDto.ChatRoomResponse> getChatRooms(Long myUserId)
-            throws ExecutionException, InterruptedException {
+    public List<ChatDto.ChatRoomResponse> getChatRooms(Long myUserId) {
 
         ApiFuture<QuerySnapshot> future = firestore.collection("chat_rooms")
                 .whereArrayContains("participants", myUserId)
                 .orderBy("updatedAt", Query.Direction.DESCENDING)
                 .get();
 
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+        try {
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-        return documents.stream()
-                .map(this::mapDocumentToChatRoomResponse)
-                .collect(Collectors.toList());
+            return documents.stream()
+                    .map(this::mapDocumentToChatRoomResponse)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Firestore 조회(getChatRooms) 중 인터럽트 발생: {}", e.getMessage());
+            throw new CustomException(ErrorCode.CHAT_ROOM_LIST_FAILED);
+        } catch (Exception e) {
+            log.error("Firestore 조회(getChatRooms) 실패 (색인 문제일 수 있음): {}", e.getMessage());
+            throw new CustomException(ErrorCode.CHAT_ROOM_LIST_FAILED);
+        }
     }
 
     private ChatDto.ChatRoomResponse mapDocumentToChatRoomResponse(QueryDocumentSnapshot doc) {
-        Map<String, Object> lastMessageMap = (Map<String, Object>) doc.get("lastMessage");
+
         ChatDto.LastMessageInfo lastMessageInfo = null;
-        if (lastMessageMap != null) {
+        if (doc.get("lastMessage") instanceof Map) {
+            Map<String, Object> lastMessageMap = (Map<String, Object>) doc.get("lastMessage");
             lastMessageInfo = ChatDto.LastMessageInfo.builder()
-                    .text((String) lastMessageMap.get("text"))
-                    .senderId((Long) lastMessageMap.get("senderId"))
-                    .timestamp((Timestamp) lastMessageMap.get("timestamp"))
+                    .text(lastMessageMap.get("text") instanceof String ? (String) lastMessageMap.get("text") : null)
+                    .senderId(lastMessageMap.get("senderId") instanceof Number ? ((Number) lastMessageMap.get("senderId")).longValue() : null)
+                    .timestamp(lastMessageMap.get("timestamp") instanceof Timestamp ? (Timestamp) lastMessageMap.get("timestamp") : null)
                     .build();
         }
 
-        Map<String, Object> participantInfoMap = (Map<String, Object>) doc.get("participantInfo");
         Map<String, ChatDto.ParticipantInfo> participantInfo = new HashMap<>();
-        if (participantInfoMap != null) {
+        if (doc.get("participantInfo") instanceof Map) {
+            Map<String, Object> participantInfoMap = (Map<String, Object>) doc.get("participantInfo");
             for (Map.Entry<String, Object> entry : participantInfoMap.entrySet()) {
-                Map<String, Object> info = (Map<String, Object>) entry.getValue();
-                participantInfo.put(entry.getKey(), ChatDto.ParticipantInfo.builder()
-                        .nickname((String) info.get("nickname"))
-                        .profileUrl((String) info.get("profileUrl"))
-                        .build());
+                if (entry.getValue() instanceof Map) {
+                    Map<String, Object> info = (Map<String, Object>) entry.getValue();
+                    participantInfo.put(entry.getKey(), ChatDto.ParticipantInfo.builder()
+                            .nickname(info.get("nickname") instanceof String ? (String) info.get("nickname") : null)
+                            .profileUrl(info.get("profileUrl") instanceof String ? (String) info.get("profileUrl") : null)
+                            .build());
+                }
+            }
+        }
+
+        Map<String, Long> unreadCount = new HashMap<>();
+        if (doc.get("unreadCount") instanceof Map) {
+            Map<String, Object> unreadCountMap = (Map<String, Object>) doc.get("unreadCount");
+            unreadCountMap.forEach((key, value) -> {
+                if (value instanceof Number) {
+                    unreadCount.put(key, ((Number) value).longValue());
+                }
+            });
+        }
+
+        List<Long> participants = new ArrayList<>();
+        if (doc.get("participants") instanceof List) {
+            for (Object p : (List<?>) doc.get("participants")) {
+                if (p instanceof Number) {
+                    participants.add(((Number) p).longValue());
+                }
             }
         }
 
         return ChatDto.ChatRoomResponse.builder()
                 .roomId(doc.getId())
-                .participants((List<Long>) doc.get("participants"))
+                .participants(participants)
                 .lastMessage(lastMessageInfo)
                 .participantInfo(participantInfo)
-                .unreadCount((Map<String, Long>) doc.get("unreadCount"))
+                .unreadCount(unreadCount)
                 .updatedAt(doc.getTimestamp("updatedAt"))
                 .build();
     }

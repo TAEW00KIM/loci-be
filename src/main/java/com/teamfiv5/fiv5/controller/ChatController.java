@@ -53,7 +53,7 @@ public class ChatController {
     @GetMapping("/rooms")
     public ResponseEntity<CustomResponse<List<ChatDto.ChatRoomResponse>>> getMyChatRooms(
             @AuthenticationPrincipal AuthenticatedUser user
-    ) throws ExecutionException, InterruptedException {
+    ) {
         Long myUserId = getUserId(user);
         List<ChatDto.ChatRoomResponse> chatRooms = chatService.getChatRooms(myUserId);
         return ResponseEntity.ok(CustomResponse.ok(chatRooms));
