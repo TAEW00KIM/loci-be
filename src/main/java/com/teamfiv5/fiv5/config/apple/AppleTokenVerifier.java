@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigInteger;
-import java.net.URL;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.RSAPublicKeySpec;
@@ -20,9 +19,9 @@ import java.util.Map;
 @Component
 public class AppleTokenVerifier {
 
-    private final String appleIss; // "https://appleid.apple.com"
-    private final String appleAudience; // 앱의 Bundle ID
-    private final String appleKeysUrl; // "https://appleid.apple.com/auth/keys"
+    private final String appleIss;
+    private final String appleAudience;
+    private final String appleKeysUrl;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -39,25 +38,18 @@ public class AppleTokenVerifier {
         this.objectMapper = new ObjectMapper();
     }
 
-    /**
-     * Apple identityToken을 검증하고, 검증된 토큰의 Claims를 반환합니다.
-     */
     public Claims verify(String identityToken) {
         try {
-            // 1. 토큰 헤더에서 kid, alg 추출
             String headerJson = new String(Base64.getUrlDecoder().decode(identityToken.substring(0, identityToken.indexOf('.'))));
             Map<String, String> header = objectMapper.readValue(headerJson, Map.class);
             String kid = header.get("kid");
             String alg = header.get("alg");
 
-            // 2. Apple 공개 키 가져오기
             ApplePublicKeys applePublicKeys = restTemplate.getForObject(appleKeysUrl, ApplePublicKeys.class);
             ApplePublicKeys.ApplePublicKey matchingKey = applePublicKeys.getMatchingKey(kid, alg);
 
-            // 3. 공개 키 생성
             PublicKey publicKey = createPublicKey(matchingKey);
 
-            // 4. 토큰 검증 (서명, 발급자, 대상자, 만료 시간)
             return Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .requireIssuer(appleIss)
@@ -79,11 +71,10 @@ public class AppleTokenVerifier {
         BigInteger e = new BigInteger(1, eBytes);
 
         RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(n, e);
-        KeyFactory keyFactory = KeyFactory.getInstance(key.getKty()); // "RSA"
+        KeyFactory keyFactory = KeyFactory.getInstance(key.getKty());
         return keyFactory.generatePublic(publicKeySpec);
     }
 
-    // Apple 공개 키 응답을 위한 DTO
     private static class ApplePublicKeys {
         private List<ApplePublicKey> keys;
 
@@ -105,7 +96,6 @@ public class AppleTokenVerifier {
             private String n;
             private String e;
 
-            // Getter/Setter
             public String getKty() { return kty; }
             public void setKty(String kty) { this.kty = kty; }
             public String getKid() { return kid; }

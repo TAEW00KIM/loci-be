@@ -5,10 +5,11 @@ import com.teamfiv5.fiv5.global.exception.code.ErrorCode;
 import com.teamfiv5.fiv5.global.response.CustomResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -30,9 +31,9 @@ public class GlobalExceptionHandler {
         BaseErrorCode code = ErrorCode.INVALID_REQUEST;
 
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .findFirst()
-                .orElse(code.getMessage());
+                .map(error -> String.format("%s : %s", error.getField(), error.getDefaultMessage()))
+                .collect(Collectors.joining(", "));
+        if (errorMessage.isEmpty()) errorMessage = code.getMessage();
 
         log.warn("[InvalidRequest]: {}", errorMessage);
 

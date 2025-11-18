@@ -49,7 +49,6 @@ public class Friendship {
         this.status = status;
     }
 
-    // (추가) 요청 수락
     public void accept() {
         this.status = FriendshipStatus.FRIENDSHIP;
     }
