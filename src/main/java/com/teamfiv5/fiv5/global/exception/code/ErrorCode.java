@@ -46,7 +46,10 @@ public enum ErrorCode implements BaseErrorCode {
     GUESTBOOK_ENTRY_NOT_FOUND("GUESTBOOK404_1", "방명록을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     // == 채팅 관련 에러 ==
-    CHAT_ROOM_LIST_FAILED("CHAT500_1", "채팅방 목록을 불러오는 데 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    CHAT_ROOM_LIST_FAILED("CHAT500_1", "채팅방 목록을 불러오는 데 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // == Firebase 관련 에러 ==
+    FIREBASE_AUTH_FAILED("AUTH500_1", "Firebase 인증 토큰 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
 
     private final String code;
