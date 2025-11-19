@@ -210,9 +210,9 @@ class FriendServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("실패: '내'가 친구 수 5명 제한에 도달 (FRIEND_LIMIT_EXCEEDED)")
+    @DisplayName("실패: '내'가 친구 수 20명 제한에 도달 (FRIEND_LIMIT_EXCEEDED)")
     void acceptFriend_Fail_MyLimitExceeded() {
-        createAndSaveFriends(userA, 5);
+        createAndSaveFriends(userA, 20);
 
         friendshipRepository.save(Friendship.builder()
                 .requester(userB)
@@ -220,7 +220,7 @@ class FriendServiceIntegrationTest {
                 .status(FriendshipStatus.PENDING)
                 .build());
 
-        assertThat(friendshipRepository.countByUserIdAndStatus(userA.getId(), FriendshipStatus.FRIENDSHIP)).isEqualTo(5);
+        assertThat(friendshipRepository.countByUserIdAndStatus(userA.getId(), FriendshipStatus.FRIENDSHIP)).isEqualTo(20);
 
         assertThatThrownBy(() -> friendService.acceptFriend(userA.getId(), userB.getId()))
                 .isInstanceOf(CustomException.class)
@@ -229,9 +229,9 @@ class FriendServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("실패: '상대방'이 친구 수 5명 제한에 도달 (TARGET_FRIEND_LIMIT_EXCEEDED)")
+    @DisplayName("실패: '상대방'이 친구 수 20명 제한에 도달 (TARGET_FRIEND_LIMIT_EXCEEDED)")
     void acceptFriend_Fail_TargetLimitExceeded() {
-        createAndSaveFriends(userB, 5);
+        createAndSaveFriends(userB, 20);
 
         friendshipRepository.save(Friendship.builder()
                 .requester(userB)
@@ -239,7 +239,7 @@ class FriendServiceIntegrationTest {
                 .status(FriendshipStatus.PENDING)
                 .build());
 
-        assertThat(friendshipRepository.countByUserIdAndStatus(userB.getId(), FriendshipStatus.FRIENDSHIP)).isEqualTo(5);
+        assertThat(friendshipRepository.countByUserIdAndStatus(userB.getId(), FriendshipStatus.FRIENDSHIP)).isEqualTo(20);
         assertThat(friendshipRepository.countByUserIdAndStatus(userA.getId(), FriendshipStatus.FRIENDSHIP)).isZero();
 
         assertThatThrownBy(() -> friendService.acceptFriend(userA.getId(), userB.getId()))
