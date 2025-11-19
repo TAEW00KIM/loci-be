@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FriendService {
 
-    private static final int MAX_FRIEND_LIMIT = 5;
+    private static final int MAX_FRIEND_LIMIT = 20;
 
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;

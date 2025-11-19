@@ -35,10 +35,22 @@ public class Post extends BaseTimeEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostCollaborator> collaborators = new HashSet<>();
 
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
+    @Column(nullable = true)
+    private String locationName;
+
     @Builder
-    public Post(User user, String contents) {
+    public Post(User user, String contents, Double latitude, Double longitude, String locationName) {
         this.user = user;
         this.contents = contents;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.locationName = locationName;
     }
 
     public void addMedia(PostMedia media) {
@@ -61,5 +73,12 @@ public class Post extends BaseTimeEntity {
 
     public void clearCollaborators() {
         this.collaborators.clear();
+    }
+
+    public void update(String contents, Double latitude, Double longitude, String locationName) {
+        this.contents = contents;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.locationName = locationName;
     }
 }

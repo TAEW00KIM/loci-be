@@ -44,6 +44,9 @@ public class PostService {
         Post post = Post.builder()
                 .user(author)
                 .contents(request.getContents())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .locationName(request.getLocationName())
                 .build();
 
         if (request.getMediaList() != null) {
@@ -107,6 +110,13 @@ public class PostService {
         if (!post.getUser().getId().equals(currentUserId)) {
             throw new CustomException(ErrorCode.NOT_POST_AUTHOR);
         }
+
+        post.update(
+                request.getContents(),
+                request.getLatitude(),
+                request.getLongitude(),
+                request.getLocationName()
+        );
 
         post.updateContents(request.getContents());
 

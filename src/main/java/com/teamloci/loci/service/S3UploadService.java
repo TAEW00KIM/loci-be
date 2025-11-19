@@ -24,7 +24,7 @@ public class S3UploadService {
 
     private final S3Client s3Client;
 
-    @Value("${spring.cloud.aws.s3.bucket:fiv5-assets}")
+    @Value("${spring.cloud.aws.s3.bucket:loci-assets}")
     private String bucket;
 
     @Transactional
