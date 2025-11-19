@@ -88,12 +88,18 @@ public class PostDto {
     public static class PostCreateRequest {
         @Schema(description = "포스트 본문 (비어있을 수 있음)", example = "오늘의 기록")
         private String contents;
-
         @Schema(description = "미디어 목록 (없으면 빈 배열 또는 null)")
         private List<MediaRequest> mediaList;
-
         @Schema(description = "공동 작업자 User ID 목록 (없으면 빈 배열 또는 null)", example = "[2, 3]")
         private List<Long> collaboratorIds;
+        @Schema(description = "위도", example = "37.5665")
+        @NotNull(message = "위치 정보(위도)는 필수입니다.")
+        private Double latitude;
+        @Schema(description = "경도", example = "126.9780")
+        @NotNull(message = "위치 정보(경도)는 필수입니다.")
+        private Double longitude;
+        @Schema(description = "장소명 (선택)", example = "스타벅스 강남점")
+        private String locationName;
     }
 
     @Getter
@@ -106,6 +112,12 @@ public class PostDto {
         private Long id;
         @Schema(description = "포스트 본문", example = "오늘의 기록")
         private String contents;
+        @Schema(description = "위도", example = "37.5665")
+        private Double latitude;
+        @Schema(description = "경도", example = "126.9780")
+        private Double longitude;
+        @Schema(description = "장소명", example = "스타벅스 강남점")
+        private String locationName;
         @Schema(description = "작성자 정보")
         private UserSimpleResponse author;
         @Schema(description = "미디어 목록")
@@ -121,6 +133,9 @@ public class PostDto {
             return PostDetailResponse.builder()
                     .id(post.getId())
                     .contents(post.getContents())
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
+                    .locationName(post.getLocationName())
                     .author(UserSimpleResponse.from(post.getUser()))
                     .mediaList(post.getMediaList().stream()
                             .map(MediaResponse::from)
