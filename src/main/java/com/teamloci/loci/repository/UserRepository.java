@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByBluetoothTokenIn(List<String> tokens);
     Optional<User> findByBluetoothToken(String bluetoothToken);
     boolean existsByBluetoothToken(String bluetoothToken);
-    Optional<User> findByPhoneNumber(String phoneNumber);
+    Optional<User> findByPhoneSearchHash(String phoneSearchHash);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :userId")

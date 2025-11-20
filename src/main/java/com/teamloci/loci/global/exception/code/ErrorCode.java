@@ -28,7 +28,6 @@ public enum ErrorCode implements BaseErrorCode {
     FILE_IS_EMPTY("FILE400_1", "업로드할 파일이 비어있습니다.", HttpStatus.BAD_REQUEST),
     S3_UPLOAD_FAILED("S3500_1", "S3 파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
-
     // == 친구 관련 에러 ==
     SELF_FRIEND_REQUEST("FRIEND400_1", "자기 자신에게 친구 요청을 보낼 수 없습니다.", HttpStatus.BAD_REQUEST),
     FRIEND_REQUEST_ALREADY_EXISTS("FRIEND409_1", "이미 친구 관계이거나 요청 대기 중입니다.", HttpStatus.CONFLICT),
@@ -50,8 +49,10 @@ public enum ErrorCode implements BaseErrorCode {
     CHAT_ROOM_LIST_FAILED("CHAT500_1", "채팅방 목록을 불러오는 데 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // == Firebase 관련 에러 ==
-    FIREBASE_AUTH_FAILED("AUTH500_1", "Firebase 인증 토큰 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    FIREBASE_AUTH_FAILED("AUTH500_1", "Firebase 인증 토큰 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    // == 시스템/기타 에러  ==
+    HASHING_FAILED("SYSTEM500_1", "데이터 해싱 중 치명적인 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String message;

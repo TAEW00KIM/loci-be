@@ -22,4 +22,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE p.user.id = :userId " +
             "ORDER BY p.createdAt DESC")
     List<Post> findByUserIdWithUser(@Param("userId") Long userId);
+
+    @Query("SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user " +
+            "LEFT JOIN FETCH p.mediaList " +
+            "WHERE p.beaconId = :beaconId " +
+            "ORDER BY p.createdAt DESC")
+    List<Post> findByBeaconId(@Param("beaconId") String beaconId);
 }

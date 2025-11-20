@@ -14,7 +14,9 @@ import java.util.Set;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_beacon_id", columnList = "beacon_id")
+})
 public class Post extends BaseTimeEntity {
 
     @Id
@@ -44,13 +46,17 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = true)
     private String locationName;
 
+    @Column(name = "beacon_id", nullable = false, length = 64)
+    private String beaconId;
+
     @Builder
-    public Post(User user, String contents, Double latitude, Double longitude, String locationName) {
+    public Post(User user, String contents, Double latitude, Double longitude, String locationName, String beaconId) {
         this.user = user;
         this.contents = contents;
         this.latitude = latitude;
         this.longitude = longitude;
         this.locationName = locationName;
+        this.beaconId = beaconId;
     }
 
     public void addMedia(PostMedia media) {
@@ -75,10 +81,11 @@ public class Post extends BaseTimeEntity {
         this.collaborators.clear();
     }
 
-    public void update(String contents, Double latitude, Double longitude, String locationName) {
+    public void update(String contents, Double latitude, Double longitude, String locationName, String beaconId) {
         this.contents = contents;
         this.latitude = latitude;
         this.longitude = longitude;
         this.locationName = locationName;
+        this.beaconId = beaconId;
     }
 }
