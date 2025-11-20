@@ -12,9 +12,12 @@ import com.teamloci.loci.global.util.GeoUtils;
 import com.teamloci.loci.repository.PostRepository;
 import com.teamloci.loci.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -196,5 +199,34 @@ public class PostService {
                 })
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    public PostDto.FeedResponse getFriendFeed(Long myUserId, LocalDateTime cursor, int size) {
+        Pageable pageable = PageRequest.of(0, size + 1);
+
+        List<Post> posts;
+        if (cursor == null) {
+            posts = postRepository.findFriendPostsFirstPage(myUserId, pageable);
+        } else {
+            posts = postRepository.findFriendPosts(myUserId, cursor, pageable);
+        }
+
+        boolean hasNext = false;
+        if (posts.size() > size) {
+            hasNext = true;
+            posts.remove(size);
+        }
+
+        LocalDateTime nextCursor = posts.isEmpty() ? null : posts.get(posts.size() - 1).getCreatedAt();
+
+        List<PostDto.PostDetailResponse> postDtos = posts.stream()
+                .map(PostDto.PostDetailResponse::from)
+                .collect(Collectors.toList());
+
+        return PostDto.FeedResponse.builder()
+                .posts(postDtos)
+                .hasNext(hasNext)
+                .nextCursor(nextCursor)
+                .build();
     }
 }

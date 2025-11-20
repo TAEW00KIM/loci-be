@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Tag(name = "Post", description = "포스트(게시물) 및 타임라인 API")
@@ -238,6 +239,28 @@ public class PostController {
             @RequestParam Double maxLon
     ) {
         List<PostDto.MapMarkerResponse> response = postService.getMapMarkers(minLat, maxLat, minLon, maxLon);
+        return ResponseEntity.ok(CustomResponse.ok(response));
+    }
+
+    @Operation(summary = "[Post] 8. 친구 피드 조회 (무한 스크롤)",
+            description = """
+                내 친구들이 작성한 포스트를 최신순으로 조회합니다. **커서 기반 페이지네이션**을 지원합니다.
+                
+                **[사용법]**
+                * **첫 요청:** `cursor` 파라미터 없이 요청 -> 최신 글 `size`개 반환.
+                * **다음 요청:** 응답 받은 `nextCursor` 값을 `cursor` 파라미터에 넣어서 요청.
+                * `hasNext`가 `false`면 더 이상 글이 없는 것.
+                """)
+    @GetMapping("/feed")
+    public ResponseEntity<CustomResponse<PostDto.FeedResponse>> getFriendFeed(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "이전 페이지의 마지막 포스트 작성 시간 (첫 요청 시 생략)", example = "2025-11-20T10:00:00")
+            @RequestParam(required = false) LocalDateTime cursor,
+            @Parameter(description = "한 번에 가져올 개수 (기본값 10)", example = "10")
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Long myUserId = getUserId(user);
+        PostDto.FeedResponse response = postService.getFriendFeed(myUserId, cursor, size);
         return ResponseEntity.ok(CustomResponse.ok(response));
     }
 }

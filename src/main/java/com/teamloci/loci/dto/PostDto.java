@@ -171,4 +171,20 @@ public class PostDto {
         @Schema(description = "대표 썸네일 이미지 URL (가장 최신 글)", example = "https://fiv5.../thumb.jpg")
         private String thumbnailImageUrl;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema(description = "피드(무한 스크롤) 응답")
+    public static class FeedResponse {
+        @Schema(description = "포스트 목록")
+        private List<PostDetailResponse> posts;
+
+        @Schema(description = "다음 페이지가 있는지 여부")
+        private boolean hasNext;
+
+        @Schema(description = "다음 요청에 사용할 커서 (마지막 포스트의 작성 시간)", example = "2025-11-20T10:00:00")
+        private LocalDateTime nextCursor;
+    }
 }
