@@ -2,10 +2,11 @@ package com.teamloci.loci.service;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import com.teamloci.loci.config.jwt.JwtTokenProvider;
 import com.teamloci.loci.domain.User;
-import com.teamloci.loci.dto.AppleLoginRequest;
 import com.teamloci.loci.dto.AuthResponse;
+import com.teamloci.loci.dto.PhoneLoginRequest;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
 import com.teamloci.loci.global.util.RandomNicknameGenerator;
@@ -27,44 +28,51 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private static final String APPLE_PROVIDER = "apple";
 
+    private static final String PHONE_PROVIDER = "phone";
     private static final SecureRandom random = new SecureRandom();
     private static final HexFormat hexFormat = HexFormat.of();
 
     @Transactional
-    public AuthResponse loginWithApple(AppleLoginRequest request) {
+    public AuthResponse loginWithPhone(PhoneLoginRequest request) {
+        String idToken = request.getIdToken();
 
-        String providerId = request.getIdentityToken();
+        String phoneNumber;
+        String uid;
 
-        if (!StringUtils.hasText(providerId)) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
-        }
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
 
-        Optional<User> userOptional = userRepository.findByProviderIdAndProvider(providerId, APPLE_PROVIDER);
-        final boolean isActuallyNewUser = userOptional.isEmpty();
-        User user;
+            uid = decodedToken.getUid();
+            phoneNumber = (String) decodedToken.getClaims().get("phone_number");
 
-        if (isActuallyNewUser) {
-            String email = request.getEmail();
-            String nickname;
-
-            if (StringUtils.hasText(request.getFullName())) {
-                nickname = request.getFullName();
-            } else {
-                nickname = RandomNicknameGenerator.generate();
+            if (!StringUtils.hasText(phoneNumber)) {
+                throw new CustomException(ErrorCode.NO_PHONE_NUMBER);
             }
 
+        } catch (FirebaseAuthException e) {
+            log.error("Firebase 토큰 검증 실패: {}", e.getMessage());
+            throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED);
+        }
+
+        Optional<User> userOptional = userRepository.findByPhoneNumber(phoneNumber);
+
+        final boolean isNewUser = userOptional.isEmpty();
+        User user;
+
+        if (isNewUser) {
+            String nickname = RandomNicknameGenerator.generate();
+
             if (userRepository.existsByNickname(nickname)) {
-                nickname = nickname + "_" + providerId.substring(0, 4);
+                nickname = nickname + "_" + uid.substring(0, 4);
             }
 
             user = userRepository.save(
                     User.builder()
-                            .email(email)
+                            .phoneNumber(phoneNumber)
                             .nickname(nickname)
-                            .provider(APPLE_PROVIDER)
-                            .providerId(providerId)
+                            .provider(PHONE_PROVIDER)
+                            .providerId(uid)
                             .build()
             );
         } else {
@@ -75,22 +83,9 @@ public class AuthService {
             user.updateBluetoothToken(generateUniqueBluetoothToken());
         }
 
-        boolean treatAsNewUser = isActuallyNewUser || user.getNickname().startsWith("user_") || user.getNickname().startsWith("행복한 ") || user.getNickname().startsWith("즐거운 ");
-
         String accessToken = jwtTokenProvider.createAccessToken(user);
-        String firebaseCustomToken = createFirebaseCustomToken(user.getId());
 
-        return new AuthResponse(accessToken, treatAsNewUser, firebaseCustomToken);
-    }
-
-    private String createFirebaseCustomToken(Long userId) {
-        String uid = String.valueOf(userId);
-        try {
-            return FirebaseAuth.getInstance().createCustomToken(uid);
-        } catch (FirebaseAuthException e) {
-            log.error("Firebase 커스텀 토큰 생성 실패 - userId: {}", userId, e);
-            throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED, e);
-        }
+        return new AuthResponse(accessToken, isNewUser);
     }
 
     private String generateUniqueBluetoothToken() {

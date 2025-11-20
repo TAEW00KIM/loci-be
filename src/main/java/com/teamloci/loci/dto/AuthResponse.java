@@ -8,5 +8,4 @@ import lombok.Getter;
 public class AuthResponse {
     private String accessToken;
     private Boolean isNewUser;
-    private String firebaseCustomToken;
 }
