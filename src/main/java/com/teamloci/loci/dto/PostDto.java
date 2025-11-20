@@ -100,6 +100,8 @@ public class PostDto {
         private Double longitude;
         @Schema(description = "장소명 (선택)", example = "스타벅스 강남점")
         private String locationName;
+        @Schema(description = "30일 후 자동 보관 여부 (true: 보관함 이동, false: 계속 유지). 미입력 시 기본값 true", example = "true")
+        private Boolean isAutoArchive;
     }
 
     @Getter
@@ -128,6 +130,8 @@ public class PostDto {
         private LocalDateTime createdAt;
         @Schema(description = "마지막 수정 시간")
         private LocalDateTime updatedAt;
+        @Schema(description = "30일 후 자동 보관 여부")
+        private boolean isAutoArchive;
 
         public static PostDetailResponse from(Post post) {
             return PostDetailResponse.builder()
@@ -146,6 +150,7 @@ public class PostDto {
                             .collect(Collectors.toList()))
                     .createdAt(post.getCreatedAt())
                     .updatedAt(post.getUpdatedAt())
+                    .isAutoArchive(post.isAutoArchive())
                     .build();
         }
     }

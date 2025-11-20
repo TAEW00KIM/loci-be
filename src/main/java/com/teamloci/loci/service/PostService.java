@@ -55,6 +55,7 @@ public class PostService {
                 .longitude(request.getLongitude())
                 .locationName(request.getLocationName())
                 .beaconId(beaconId)
+                .isAutoArchive(request.getIsAutoArchive())
                 .build();
 
         if (request.getMediaList() != null) {
@@ -126,7 +127,8 @@ public class PostService {
                 request.getLatitude(),
                 request.getLongitude(),
                 request.getLocationName(),
-                beaconId
+                beaconId,
+                request.getIsAutoArchive()
         );
 
         post.updateContents(request.getContents());

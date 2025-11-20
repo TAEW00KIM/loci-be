@@ -49,14 +49,23 @@ public class Post extends BaseTimeEntity {
     @Column(name = "beacon_id", nullable = false, length = 64)
     private String beaconId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PostStatus status;
+
+    @Column(nullable = false)
+    private boolean isAutoArchive;
+
     @Builder
-    public Post(User user, String contents, Double latitude, Double longitude, String locationName, String beaconId) {
+    public Post(User user, String contents, Double latitude, Double longitude, String locationName, String beaconId, Boolean isAutoArchive) {
         this.user = user;
         this.contents = contents;
         this.latitude = latitude;
         this.longitude = longitude;
         this.locationName = locationName;
         this.beaconId = beaconId;
+        this.status = PostStatus.ACTIVE;
+        this.isAutoArchive = (isAutoArchive != null) ? isAutoArchive : true;
     }
 
     public void addMedia(PostMedia media) {
@@ -81,11 +90,14 @@ public class Post extends BaseTimeEntity {
         this.collaborators.clear();
     }
 
-    public void update(String contents, Double latitude, Double longitude, String locationName, String beaconId) {
+    public void update(String contents, Double latitude, Double longitude, String locationName, String beaconId, Boolean isAutoArchive) {
         this.contents = contents;
         this.latitude = latitude;
         this.longitude = longitude;
         this.locationName = locationName;
         this.beaconId = beaconId;
+        if (isAutoArchive != null) {
+            this.isAutoArchive = isAutoArchive;
+        }
     }
 }
