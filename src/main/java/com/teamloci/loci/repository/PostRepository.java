@@ -2,6 +2,7 @@ package com.teamloci.loci.repository;
 
 import com.teamloci.loci.domain.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
@@ -21,14 +22,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p " +
             "LEFT JOIN FETCH p.user " +
-            "WHERE p.user.id = :userId " +
+            "WHERE p.user.id = :userId AND p.status = 'ACTIVE' " +
             "ORDER BY p.createdAt DESC")
     List<Post> findByUserIdWithUser(@Param("userId") Long userId);
 
     @Query("SELECT p FROM Post p " +
             "LEFT JOIN FETCH p.user " +
             "LEFT JOIN FETCH p.mediaList " +
-            "WHERE p.beaconId = :beaconId " +
+            "WHERE p.beaconId = :beaconId AND p.status = 'ACTIVE' " +
             "ORDER BY p.createdAt DESC")
     List<Post> findByBeaconId(@Param("beaconId") String beaconId);
 
@@ -37,6 +38,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "LEFT JOIN p.mediaList pm " +
             "WHERE p.latitude BETWEEN :minLat AND :maxLat " +
             "AND p.longitude BETWEEN :minLon AND :maxLon " +
+            "AND p.status = 'ACTIVE' " +
             "GROUP BY p.beaconId")
     List<Object[]> findMapMarkers(
             @Param("minLat") Double minLat,
@@ -52,6 +54,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "UNION " +
             "SELECT f.requester.id FROM Friendship f WHERE f.receiver.id = :myUserId AND f.status = 'FRIENDSHIP'" +
             ") " +
+            "AND p.status = 'ACTIVE' " +
             "AND p.createdAt < :lastCreatedAt " +
             "ORDER BY p.createdAt DESC")
     List<Post> findFriendPosts(
@@ -67,9 +70,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "UNION " +
             "SELECT f.requester.id FROM Friendship f WHERE f.receiver.id = :myUserId AND f.status = 'FRIENDSHIP'" +
             ") " +
+            "AND p.status = 'ACTIVE' " +
             "ORDER BY p.createdAt DESC")
     List<Post> findFriendPostsFirstPage(
             @Param("myUserId") Long myUserId,
             Pageable pageable
     );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.status = 'ARCHIVED' " +
+            "WHERE p.status = 'ACTIVE' " +
+            "AND p.isAutoArchive = true " +
+            "AND p.createdAt < :expiryDate")
+    int archiveOldPosts(@Param("expiryDate") LocalDateTime expiryDate);
 }

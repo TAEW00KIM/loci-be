@@ -40,7 +40,7 @@ public class PostController {
     }
 
     @Operation(summary = "[Post] 1. 포스트 생성",
-            description = "새로운 포스트를 생성합니다. 입력된 위치(위도, 경도)는 Uber H3 육각형 그리드 시스템(Res 9)을 통해 비콘 ID로 변환되어 저장됩니다.")
+            description = "새로운 포스트를 생성합니다. 'isAutoArchive' 필드를 통해 30일 후 자동 보관 여부를 설정할 수 있습니다. (기본값: true)")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "포스트 생성 요청 객체",
             required = true,
@@ -126,7 +126,7 @@ public class PostController {
     }
 
     @Operation(summary = "[Post] 5. 포스트 수정",
-            description = "포스트 내용을 수정합니다. 위치 정보가 변경될 경우 H3 비콘 ID도 재계산됩니다.")
+            description = "포스트 내용 및 자동 보관 설정을 수정합니다.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "수정할 포스트 정보",
             required = true,
