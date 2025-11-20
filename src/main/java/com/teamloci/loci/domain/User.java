@@ -22,7 +22,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false, unique = true)
@@ -33,6 +33,12 @@ public class User {
 
     @Column(nullable = true, length = 255)
     private String bio;
+
+    @Column(name = "phone_number", unique = true)
+    private String phoneNumber; // E.164 포맷
+
+    @Column(name = "country_code")
+    private String countryCode;
 
     @Column(nullable = false)
     private String provider;
@@ -59,12 +65,14 @@ public class User {
     }
 
     @Builder
-    public User(String email, String nickname, String profileUrl, String provider, String providerId) {
+    public User(String email, String nickname, String profileUrl, String provider, String providerId, String phoneNumber, String countryCode) { // 생성자에도 추가 추천
         this.email = email;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
         this.provider = provider;
         this.providerId = providerId;
+        this.phoneNumber = phoneNumber;
+        this.countryCode = countryCode;
         this.status = UserStatus.ACTIVE;
         this.bio = null;
     }
