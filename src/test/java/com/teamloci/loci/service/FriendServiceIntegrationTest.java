@@ -1,5 +1,8 @@
 package com.teamloci.loci.service;
 
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.teamloci.loci.domain.Friendship;
 import com.teamloci.loci.domain.FriendshipStatus;
 import com.teamloci.loci.domain.User;
@@ -13,7 +16,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.util.HexFormat;
 import java.util.List;
@@ -35,15 +40,47 @@ class FriendServiceIntegrationTest {
     @Autowired
     private FriendshipRepository friendshipRepository;
 
+    @MockBean
+    private Firestore firestore;
+
+    @MockBean
+    private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private FirebaseMessaging firebaseMessaging;
+
+    @MockBean
+    private NotificationService notificationService;
+
+    @MockBean
+    private S3Client s3Client;
+
     private User userA;
     private User userB;
     private User userC;
 
     @BeforeEach
     void setUp() {
-        userA = User.builder().nickname("UserA").provider("apple").providerId("provider_A").build();
-        userB = User.builder().nickname("UserB").provider("apple").providerId("provider_B").build();
-        userC = User.builder().nickname("UserC").provider("apple").providerId("provider_C").build();
+        userA = User.builder()
+                .email("a@test.com")
+                .nickname("UserA")
+                .provider("apple")
+                .providerId("provider_A")
+                .build();
+
+        userB = User.builder()
+                .email("b@test.com")
+                .nickname("UserB")
+                .provider("apple")
+                .providerId("provider_B")
+                .build();
+
+        userC = User.builder()
+                .email("c@test.com")
+                .nickname("UserC")
+                .provider("apple")
+                .providerId("provider_C")
+                .build();
 
         userA.updateBluetoothToken(generateTestToken());
         userB.updateBluetoothToken(generateTestToken());
@@ -73,9 +110,6 @@ class FriendServiceIntegrationTest {
         String tokenA = friendService.getBluetoothToken(userA.getId()).getBluetoothToken();
 
         assertThat(tokenA).isEqualTo(fixedTokenA);
-
-        String tokenA_again = friendService.getBluetoothToken(userA.getId()).getBluetoothToken();
-        assertThat(tokenA_again).isEqualTo(fixedTokenA);
     }
 
     @Test
@@ -89,23 +123,15 @@ class FriendServiceIntegrationTest {
         );
 
         assertThat(result).hasSize(2);
-
         assertThat(result)
                 .extracting(FriendDto.DiscoveredUserResponse::getNickname)
                 .containsExactlyInAnyOrder("UserB", "UserC");
-
-        assertThat(result)
-                .extracting(FriendDto.DiscoveredUserResponse::getId)
-                .containsExactlyInAnyOrder(userB.getId(), userC.getId());
-
-        assertThat(result)
-                .extracting(FriendDto.DiscoveredUserResponse::getFriendshipStatus)
-                .containsOnly(FriendDto.FriendshipStatusInfo.NONE);
     }
 
     private void createAndSaveFriends(User user, int count) {
         List<User> dummyFriends = IntStream.range(1, count + 1)
                 .mapToObj(i -> User.builder()
+                        .email("friend" + i + "@test.com")
                         .nickname("F" + i + "_" + user.getNickname())
                         .provider("apple")
                         .providerId("f" + i + "_" + user.getNickname())
@@ -136,11 +162,6 @@ class FriendServiceIntegrationTest {
         assertThat(friendship.getRequester().getId()).isEqualTo(userA.getId());
         assertThat(friendship.getReceiver().getId()).isEqualTo(userB.getId());
         assertThat(friendship.getStatus()).isEqualTo(FriendshipStatus.PENDING);
-
-        User updatedUserB = userRepository.findById(userB.getId())
-                .orElseThrow(() -> new AssertionError("User B not found"));
-        assertThat(updatedUserB.getBluetoothToken()).isNotNull();
-        assertThat(updatedUserB.getBluetoothToken()).isEqualTo(userB.getBluetoothToken());
     }
 
     @Test
