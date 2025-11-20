@@ -1,8 +1,5 @@
 package com.teamloci.loci.service;
 
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.teamloci.loci.domain.Friendship;
 import com.teamloci.loci.domain.FriendshipStatus;
 import com.teamloci.loci.domain.User;
@@ -16,9 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.util.HexFormat;
 import java.util.List;
@@ -39,18 +34,6 @@ class FriendServiceIntegrationTest {
 
     @Autowired
     private FriendshipRepository friendshipRepository;
-
-    @Autowired
-    private AuthService authService;
-
-    @MockBean
-    private S3Client s3Client;
-    @MockBean
-    private Firestore firestore;
-    @MockBean
-    private FirebaseAuth firebaseAuth;
-    @MockBean
-    private FirebaseMessaging firebaseMessaging;
 
     private User userA;
     private User userB;
@@ -147,12 +130,15 @@ class FriendServiceIntegrationTest {
 
         friendService.requestFriend(userA.getId(), idB);
 
-        Friendship friendship = friendshipRepository.findAll().get(0);
+        List<Friendship> friendships = friendshipRepository.findAll();
+        assertThat(friendships).hasSize(1);
+        Friendship friendship = friendships.get(0);
         assertThat(friendship.getRequester().getId()).isEqualTo(userA.getId());
         assertThat(friendship.getReceiver().getId()).isEqualTo(userB.getId());
         assertThat(friendship.getStatus()).isEqualTo(FriendshipStatus.PENDING);
 
-        User updatedUserB = userRepository.findById(userB.getId()).get();
+        User updatedUserB = userRepository.findById(userB.getId())
+                .orElseThrow(() -> new AssertionError("User B not found"));
         assertThat(updatedUserB.getBluetoothToken()).isNotNull();
         assertThat(updatedUserB.getBluetoothToken()).isEqualTo(userB.getBluetoothToken());
     }
@@ -196,7 +182,9 @@ class FriendServiceIntegrationTest {
 
         friendService.acceptFriend(userB.getId(), userA.getId());
 
-        Friendship friendship = friendshipRepository.findAll().get(0);
+        List<Friendship> friendships = friendshipRepository.findAll();
+        assertThat(friendships).hasSize(1);
+        Friendship friendship = friendships.get(0);
         assertThat(friendship.getStatus()).isEqualTo(FriendshipStatus.FRIENDSHIP);
     }
 
