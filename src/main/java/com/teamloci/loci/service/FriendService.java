@@ -1,12 +1,15 @@
 package com.teamloci.loci.service;
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.teamloci.loci.domain.Friendship;
 import com.teamloci.loci.domain.FriendshipStatus;
 import com.teamloci.loci.domain.User;
+import com.teamloci.loci.domain.UserStatus;
 import com.teamloci.loci.dto.FriendDto;
 import com.teamloci.loci.dto.UserDto;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
+import com.teamloci.loci.global.util.AesUtil;
 import com.teamloci.loci.repository.FriendshipRepository;
 import com.teamloci.loci.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class FriendService {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
     private final NotificationService notificationService;
+    private final AesUtil aesUtil;
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
@@ -70,6 +74,40 @@ public class FriendService {
                     FriendDto.FriendshipStatusInfo statusInfo = calculateFriendshipStatus(myUserId, friendship);
                     return FriendDto.DiscoveredUserResponse.of(user, statusInfo);
                 })
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto.UserResponse> matchFriends(Long myUserId, List<String> rawPhoneNumbers) {
+        User me = findUserById(myUserId);
+
+        String defaultRegion = StringUtils.hasText(me.getCountryCode()) ? me.getCountryCode() : "KR";
+
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+
+        List<String> hashedNumbers = rawPhoneNumbers.stream()
+                .map(rawNumber -> {
+                    try {
+                        var parsedNumber = phoneUtil.parse(rawNumber, defaultRegion);
+
+                        String e164Number = phoneUtil.format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.E164);
+                        return aesUtil.hash(e164Number);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (hashedNumbers.isEmpty()) {
+            return List.of();
+        }
+
+        List<User> matchedUsers = userRepository.findByPhoneSearchHashIn(hashedNumbers);
+
+        return matchedUsers.stream()
+                .filter(user -> !user.getId().equals(myUserId))
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .map(UserDto.UserResponse::from)
                 .collect(Collectors.toList());
     }
 
