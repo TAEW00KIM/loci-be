@@ -172,4 +172,29 @@ public class PostService {
                 .map(PostDto.PostDetailResponse::from)
                 .collect(Collectors.toList());
     }
+
+    public List<PostDto.MapMarkerResponse> getMapMarkers(Double minLat, Double maxLat, Double minLon, Double maxLon) {
+        List<Object[]> results = postRepository.findMapMarkers(minLat, maxLat, minLon, maxLon);
+
+        return results.stream()
+                .map(row -> {
+                    String beaconId = (String) row[0];
+                    Long count = (Long) row[1];
+                    String thumbnail = (String) row[2];
+
+                    GeoUtils.Pair<Double, Double> latLng = geoUtils.beaconIdToLatLng(beaconId);
+
+                    if (latLng == null) return null;
+
+                    return PostDto.MapMarkerResponse.builder()
+                            .beaconId(beaconId)
+                            .latitude(latLng.lat)
+                            .longitude(latLng.lng)
+                            .count(count)
+                            .thumbnailImageUrl(thumbnail)
+                            .build();
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 }

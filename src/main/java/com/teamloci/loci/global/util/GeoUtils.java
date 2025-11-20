@@ -29,13 +29,21 @@ public class GeoUtils {
     }
 
     public Pair<Double, Double> beaconIdToLatLng(String beaconId) {
-        var latLng = h3.cellToLatLng(beaconId);
-        return new Pair<>(latLng.lat, latLng.lng);
+        try {
+            var latLng = h3.cellToLatLng(beaconId);
+            return new Pair<>(latLng.lat, latLng.lng);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static class Pair<K, V> {
         public final K lat;
         public final V lng;
-        public Pair(K lat, V lng) { this.lat = lat; this.lng = lng; }
+        public Pair(K lat, V lng) {
+            this.lat = lat;
+            this.lng = lng;
+        }
     }
+
 }

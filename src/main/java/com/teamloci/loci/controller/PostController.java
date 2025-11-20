@@ -187,4 +187,57 @@ public class PostController {
         List<PostDto.PostDetailResponse> response = postService.getPostsByLocation(latitude, longitude);
         return ResponseEntity.ok(CustomResponse.ok(response));
     }
+
+    @Operation(summary = "[Post] 7. (Map) 지도 범위 내 마커(비콘) 조회",
+            description = """
+                현재 보고 있는 지도 화면의 **사각형 범위(Bounding Box)** 정보를 받아, 해당 범위 안에 있는 비콘(육각형)들의 정보를 반환합니다.
+                
+                **[요청 파라미터 설명]**
+                * `minLat`: 화면 **가장 아래쪽(남쪽)** 위도 (South-West Latitude)
+                * `maxLat`: 화면 **가장 위쪽(북쪽)** 위도 (North-East Latitude)
+                * `minLon`: 화면 **가장 왼쪽(서쪽)** 경도 (South-West Longitude)
+                * `maxLon`: 화면 **가장 오른쪽(동쪽)** 경도 (North-East Longitude)
+                """)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공. (범위 내에 글이 없으면 빈 배열 반환)",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "code": "COMMON200",
+                                      "result": [
+                                        {
+                                          "beaconId": "89283082807ffff",
+                                          "latitude": 37.5665,
+                                          "longitude": 126.9780,
+                                          "count": 5,
+                                          "thumbnailImageUrl": "https://fiv5-assets.s3.../thumb.jpg"
+                                        },
+                                        {
+                                          "beaconId": "8928308280bffff",
+                                          "latitude": 37.5640,
+                                          "longitude": 126.9750,
+                                          "count": 2,
+                                          "thumbnailImageUrl": "https://fiv5-assets.s3.../thumb2.jpg"
+                                        }
+                                      ]
+                                    }
+                                    """)))
+    })
+    @GetMapping("/map")
+    public ResponseEntity<CustomResponse<List<PostDto.MapMarkerResponse>>> getMapMarkers(
+            @Parameter(description = "최소 위도 (남서쪽/Bottom-Left Lat)", required = true, example = "37.5000")
+            @RequestParam Double minLat,
+
+            @Parameter(description = "최대 위도 (북동쪽/Top-Right Lat)", required = true, example = "37.6000")
+            @RequestParam Double maxLat,
+
+            @Parameter(description = "최소 경도 (남서쪽/Bottom-Left Lon)", required = true, example = "126.9000")
+            @RequestParam Double minLon,
+
+            @Parameter(description = "최대 경도 (북동쪽/Top-Right Lon)", required = true, example = "127.0000")
+            @RequestParam Double maxLon
+    ) {
+        List<PostDto.MapMarkerResponse> response = postService.getMapMarkers(minLat, maxLat, minLon, maxLon);
+        return ResponseEntity.ok(CustomResponse.ok(response));
+    }
 }

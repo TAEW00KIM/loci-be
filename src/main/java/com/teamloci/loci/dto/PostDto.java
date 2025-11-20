@@ -149,4 +149,26 @@ public class PostDto {
                     .build();
         }
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema(description = "지도 마커(비콘 요약) 응답")
+    public static class MapMarkerResponse {
+        @Schema(description = "비콘 ID (육각형 구역 ID)", example = "89283082807ffff")
+        private String beaconId;
+
+        @Schema(description = "비콘 중심 위도", example = "37.5665")
+        private Double latitude;
+
+        @Schema(description = "비콘 중심 경도", example = "126.9780")
+        private Double longitude;
+
+        @Schema(description = "해당 구역의 게시글 총 개수", example = "5")
+        private Long count;
+
+        @Schema(description = "대표 썸네일 이미지 URL (가장 최신 글)", example = "https://fiv5.../thumb.jpg")
+        private String thumbnailImageUrl;
+    }
 }

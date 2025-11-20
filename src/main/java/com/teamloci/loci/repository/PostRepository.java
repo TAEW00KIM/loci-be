@@ -29,4 +29,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE p.beaconId = :beaconId " +
             "ORDER BY p.createdAt DESC")
     List<Post> findByBeaconId(@Param("beaconId") String beaconId);
+
+    @Query("SELECT p.beaconId, COUNT(p), MAX(pm.mediaUrl) " +
+            "FROM Post p " +
+            "LEFT JOIN p.mediaList pm " +
+            "WHERE p.latitude BETWEEN :minLat AND :maxLat " +
+            "AND p.longitude BETWEEN :minLon AND :maxLon " +
+            "GROUP BY p.beaconId")
+    List<Object[]> findMapMarkers(
+            @Param("minLat") Double minLat,
+            @Param("maxLat") Double maxLat,
+            @Param("minLon") Double minLon,
+            @Param("maxLon") Double maxLon
+    );
 }
