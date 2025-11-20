@@ -303,4 +303,70 @@ public class FriendController {
         List<UserDto.UserResponse> friends = friendService.getMyFriends(myUserId);
         return ResponseEntity.ok(CustomResponse.ok(friends));
     }
+
+    @Operation(summary = "[친구] 11. 연락처 기반 친구 매칭 (Contact Sync)",
+            description = """
+                사용자의 휴대폰 주소록에 있는 전화번호 리스트를 전송하면, **우리 앱에 가입된 친구 목록**을 반환합니다.
+                
+                **[기능 상세]**
+                * 클라이언트는 주소록의 전화번호를 **있는 그대로(Raw)** 보내도 됩니다. (예: `010-1234-5678`, `+82 10 1234 5678`)
+                * 서버에서 자동으로 **E.164 국제 표준 포맷(`+821012345678`)**으로 변환하고 해싱하여 매칭합니다.
+                * 이미 친구인 사용자도 포함되어 반환될 수 있으므로, 클라이언트에서 필터링하거나 표시를 달리해야 할 수 있습니다.
+                * **나 자신**과 **탈퇴한 사용자**는 자동으로 제외됩니다.
+                """)
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "매칭할 전화번호 리스트",
+            required = true,
+            content = @Content(examples = @ExampleObject(value = """
+                    {
+                      "phoneNumbers": [
+                        "010-1234-5678",
+                        "+82 10-9876-5432",
+                        "010 5555 7777"
+                      ]
+                    }
+                    """))
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "매칭 성공 (가입된 유저 리스트 반환)",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "code": "COMMON200",
+                                      "result": [
+                                        {
+                                          "id": 3,
+                                          "nickname": "내친구1",
+                                          "bio": "반가워",
+                                          "profileUrl": "https://...",
+                                          "email": "friend1@test.com",
+                                          "provider": "phone",
+                                          "providerId": "firebase_uid_1",
+                                          "createdAt": "2025-11-20T10:00:00"
+                                        },
+                                        {
+                                          "id": 7,
+                                          "nickname": "동네친구",
+                                          "bio": "",
+                                          "profileUrl": null,
+                                          "email": "friend2@test.com",
+                                          "provider": "phone",
+                                          "providerId": "firebase_uid_2",
+                                          "createdAt": "2025-11-21T12:00:00"
+                                        }
+                                      ]
+                                    }
+                                    """))),
+            @ApiResponse(responseCode = "400", description = "(COMMON400) 전화번호 리스트가 없거나 비어있음", content = @Content),
+            @ApiResponse(responseCode = "401", description = "(COMMON401) 인증 실패", content = @Content)
+    })
+    @PostMapping("/match")
+    public ResponseEntity<CustomResponse<List<UserDto.UserResponse>>> matchFriends(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Valid @RequestBody FriendDto.ContactListRequest request
+    ) {
+        Long myUserId = getUserId(user);
+        List<UserDto.UserResponse> matchedFriends = friendService.matchFriends(myUserId, request.getPhoneNumbers());
+        return ResponseEntity.ok(CustomResponse.ok(matchedFriends));
+    }
 }
