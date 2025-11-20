@@ -9,6 +9,7 @@ import com.teamloci.loci.dto.AuthResponse;
 import com.teamloci.loci.dto.PhoneLoginRequest;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
+import com.teamloci.loci.global.util.AesUtil;
 import com.teamloci.loci.global.util.RandomNicknameGenerator;
 import com.teamloci.loci.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AesUtil aesUtil;
 
     private static final String PHONE_PROVIDER = "phone";
     private static final SecureRandom random = new SecureRandom();
@@ -55,11 +57,11 @@ public class AuthService {
             throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED);
         }
 
-        Optional<User> userOptional = userRepository.findByPhoneNumber(phoneNumber);
+        String searchHash = aesUtil.hash(phoneNumber);
+        Optional<User> userOptional = userRepository.findByPhoneSearchHash(searchHash);
 
         final boolean isNewUser = userOptional.isEmpty();
         User user;
-
         if (isNewUser) {
             String nickname = RandomNicknameGenerator.generate();
 
@@ -69,10 +71,12 @@ public class AuthService {
 
             user = userRepository.save(
                     User.builder()
-                            .phoneNumber(phoneNumber)
+                            .phoneEncrypted(aesUtil.encrypt(phoneNumber))
+                            .phoneSearchHash(searchHash)
                             .nickname(nickname)
                             .provider(PHONE_PROVIDER)
                             .providerId(uid)
+                            .email(null)
                             .build()
             );
         } else {

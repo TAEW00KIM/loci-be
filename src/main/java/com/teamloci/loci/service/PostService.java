@@ -8,6 +8,7 @@ import com.teamloci.loci.domain.User;
 import com.teamloci.loci.dto.PostDto;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
+import com.teamloci.loci.global.util.GeoUtils;
 import com.teamloci.loci.repository.PostRepository;
 import com.teamloci.loci.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +42,15 @@ public class PostService {
     public PostDto.PostDetailResponse createPost(Long authorId, PostDto.PostCreateRequest request) {
         User author = findUserById(authorId);
 
+        String beaconId = GeoUtils.generateBeaconId(request.getLatitude(), request.getLongitude());
+
         Post post = Post.builder()
                 .user(author)
                 .contents(request.getContents())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .locationName(request.getLocationName())
+                .beaconId(beaconId)
                 .build();
 
         if (request.getMediaList() != null) {
@@ -111,11 +115,14 @@ public class PostService {
             throw new CustomException(ErrorCode.NOT_POST_AUTHOR);
         }
 
+        String beaconId = GeoUtils.generateBeaconId(request.getLatitude(), request.getLongitude());
+
         post.update(
                 request.getContents(),
                 request.getLatitude(),
                 request.getLongitude(),
-                request.getLocationName()
+                request.getLocationName(),
+                beaconId // [수정 4] 업데이트 반영
         );
 
         post.updateContents(request.getContents());
@@ -148,7 +155,20 @@ public class PostService {
             );
         }
 
-        // (6. 리뷰 3번 유지) DTO 변환 시점 N+1 방지를 위해 fetch join 쿼리 재실행
         return PostDto.PostDetailResponse.from(findPostById(post.getId()));
+    }
+
+    public List<PostDto.PostDetailResponse> getPostsByLocation(Double latitude, Double longitude) {
+        String beaconId = GeoUtils.generateBeaconId(latitude, longitude);
+
+        if (beaconId == null) {
+            return List.of();
+        }
+
+        List<Post> posts = postRepository.findByBeaconId(beaconId);
+
+        return posts.stream()
+                .map(PostDto.PostDetailResponse::from)
+                .collect(Collectors.toList());
     }
 }
