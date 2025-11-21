@@ -42,7 +42,7 @@ public class AesUtil {
             byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(encrypted);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR); // 암호화 실패
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -56,7 +56,7 @@ public class AesUtil {
             byte[] decoded = Base64.getDecoder().decode(encryptedText);
             return new String(cipher.doFinal(decoded), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR); // 복호화 실패
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

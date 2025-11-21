@@ -20,4 +20,7 @@ public class PhoneLoginRequest {
 
     @Schema(description = "회원가입 시 사용할 닉네임. (로그인 시 생략 가능)", example = "행복한 쿼카")
     private String nickname;
+
+    @Schema(description = "회원가입 시 유저의 국가 코드 (예: KR, US). 친구 매칭 시 번호 파싱 기준이 됩니다.", example = "KR")
+    private String countryCode;
 }

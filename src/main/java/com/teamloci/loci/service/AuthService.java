@@ -54,13 +54,20 @@ public class AuthService {
         String idToken = request.getIdToken();
         String inputHandle = request.getHandle();
         String inputNickname = request.getNickname();
+        String inputCountryCode = StringUtils.hasText(request.getCountryCode()) ? request.getCountryCode() : "KR";
 
         if (!StringUtils.hasText(inputHandle) || !StringUtils.hasText(inputNickname)) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
         String phoneNumber = verifyFirebaseToken(idToken);
+
+        log.info(">>> [회원가입] Firebase 추출 전화번호: {}", phoneNumber);
+
         String searchHash = aesUtil.hash(phoneNumber);
+
+        String encryptedPhone = aesUtil.encrypt(phoneNumber);
+        log.info(">>> [회원가입] DB 저장될 암호문: {}", encryptedPhone);
 
         if (userRepository.findByPhoneSearchHash(searchHash).isPresent()) {
             throw new CustomException(ErrorCode.PHONE_NUMBER_ALREADY_USING);
@@ -72,10 +79,11 @@ public class AuthService {
 
         User user = userRepository.save(
                 User.builder()
-                        .phoneEncrypted(aesUtil.encrypt(phoneNumber))
+                        .phoneEncrypted(encryptedPhone)
                         .phoneSearchHash(searchHash)
                         .handle(inputHandle)
                         .nickname(inputNickname)
+                        .countryCode(inputCountryCode)
                         .build()
         );
 

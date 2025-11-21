@@ -1,5 +1,6 @@
 package com.teamloci.loci.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.teamloci.loci.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -29,6 +30,7 @@ public class UserDto {
     @Schema(description = "핸들 중복 검사 응답")
     public static class HandleCheckResponse {
         @Schema(description = "사용 가능 여부 (true: 사용 가능, false: 중복됨)", example = "true")
+        @JsonProperty("isValidHandle")
         private boolean isValidHandle;
     }
 
