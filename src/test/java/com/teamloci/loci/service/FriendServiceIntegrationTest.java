@@ -6,6 +6,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.teamloci.loci.domain.Friendship;
 import com.teamloci.loci.domain.FriendshipStatus;
 import com.teamloci.loci.domain.User;
+import com.teamloci.loci.domain.UserStatus;
 import com.teamloci.loci.dto.UserDto;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
@@ -21,7 +22,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
 
+import java.util.HexFormat;
 import java.util.List;
+import java.security.SecureRandom;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -52,23 +55,41 @@ class FriendServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        String phoneA = "+821011111111";
+        String phoneB = "+821022222222";
+
         userA = User.builder()
-                .email("a@test.com")
+                .handle("user_a")
                 .nickname("UserA")
-                .provider("phone")
-                .providerId("uid_a")
+                .phoneSearchHash(aesUtil.hash(phoneA))
+                .phoneEncrypted(aesUtil.encrypt(phoneA))
                 .countryCode("KR")
                 .build();
 
         userB = User.builder()
-                .email("b@test.com")
+                .handle("user_b")
                 .nickname("UserB")
-                .provider("phone")
-                .providerId("uid_b")
+                .phoneSearchHash(aesUtil.hash(phoneB))
+                .phoneEncrypted(aesUtil.encrypt(phoneB))
                 .countryCode("KR")
                 .build();
 
+        userA.updateBluetoothToken(generateTestToken());
+        userB.updateBluetoothToken(generateTestToken());
+
         userRepository.saveAll(List.of(userA, userB));
+    }
+
+    private String generateTestToken() {
+        SecureRandom random = new SecureRandom();
+        HexFormat hexFormat = HexFormat.of();
+        byte[] tokenBytes = new byte[4];
+        String newToken;
+        do {
+            random.nextBytes(tokenBytes);
+            newToken = hexFormat.formatHex(tokenBytes);
+        } while (userRepository.existsByBluetoothToken(newToken));
+        return newToken;
     }
 
     @Test
@@ -79,11 +100,10 @@ class FriendServiceIntegrationTest {
         String searchHash = aesUtil.hash(e164PhoneNumber);
 
         User userC = User.builder()
-                .email("c@test.com")
+                .handle("phone_friend")
                 .nickname("PhoneFriend")
-                .provider("phone")
-                .providerId("uid_c")
                 .phoneSearchHash(searchHash)
+                .phoneEncrypted(aesUtil.encrypt(e164PhoneNumber))
                 .countryCode("KR")
                 .build();
         userRepository.save(userC);
@@ -108,7 +128,7 @@ class FriendServiceIntegrationTest {
         Friendship friendship = friendships.get(0);
         assertThat(friendship.getRequester().getId()).isEqualTo(userA.getId());
         assertThat(friendship.getReceiver().getId()).isEqualTo(userB.getId());
-        assertThat(friendship.getStatus()).isEqualTo(FriendshipStatus.FRIENDSHIP); // PENDING 아님!
+        assertThat(friendship.getStatus()).isEqualTo(FriendshipStatus.FRIENDSHIP);
     }
 
     @Test

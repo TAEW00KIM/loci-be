@@ -27,22 +27,22 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "[Auth] 1. 전화번호 로그인 (Firebase)",
-            description = "클라이언트가 Firebase 인증 후 받은 ID Token을 전송하면, 서버 검증 후 서비스 JWT를 발급합니다.")
+    @Operation(summary = "[Auth] 1. 전화번호 로그인 (가입 확인 및 토큰 발급)",
+            description = "Firebase ID Token을 보내 가입 여부를 확인합니다. \n\n" +
+                    "* **기존 회원:** `accessToken` 발급, `isNewUser: false`\n" +
+                    "* **신규 회원:** `accessToken: null`, `isNewUser: true` 반환 -> **회원가입 API 호출 필요**")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인/회원가입 성공",
+            @ApiResponse(responseCode = "200", description = "확인 성공",
                     content = @Content(schema = @Schema(implementation = CustomResponse.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "code": "COMMON200",
                                       "result": {
-                                        "accessToken": "eyJh...[서비스 JWT]...",
-                                        "isNewUser": true
+                                        "accessToken": "eyJh...",
+                                        "isNewUser": false
                                       }
                                     }
-                                    """))),
-            @ApiResponse(responseCode = "400", description = "(COMMON400) ID Token 누락", content = @Content),
-            @ApiResponse(responseCode = "401", description = "(AUTH401) Firebase 토큰 검증 실패", content = @Content)
+                                    """)))
     })
     @PostMapping("/login/phone")
     public ResponseEntity<CustomResponse<AuthResponse>> loginWithPhone(
@@ -50,5 +50,26 @@ public class AuthController {
     ) {
         AuthResponse authResponse = authService.loginWithPhone(request);
         return ResponseEntity.ok(CustomResponse.ok(authResponse));
+    }
+
+    @Operation(summary = "[Auth] 2. 전화번호 회원가입 (계정 생성)",
+            description = "신규 유저의 계정을 생성합니다. **토큰을 반환하지 않으므로**, 가입 성공 후 다시 **로그인 API**를 호출하여 토큰을 받아야 합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "가입 성공 (토큰 없음)",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "code": "COMMON200",
+                                      "result": null
+                                    }
+                                    """))),
+            @ApiResponse(responseCode = "409", description = "이미 가입된 사용자", content = @Content)
+    })
+    @PostMapping("/signup/phone")
+    public ResponseEntity<CustomResponse<Void>> signUpWithPhone(
+            @Valid @RequestBody PhoneLoginRequest request
+    ) {
+        authService.signUpWithPhone(request);
+        return ResponseEntity.ok(CustomResponse.ok(null));
     }
 }

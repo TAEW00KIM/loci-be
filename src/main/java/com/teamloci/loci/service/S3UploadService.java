@@ -131,7 +131,7 @@ public class S3UploadService {
                 .bucket(bucket)
                 .key(key)
                 .contentType(contentType)
-                .cacheControl("public, max-age=31536000")
+                .cacheControl(CACHE_CONTROL_VALUE)
                 .build();
 
         s3Client.putObject(putObjectRequest,

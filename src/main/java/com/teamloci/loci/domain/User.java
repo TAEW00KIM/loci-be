@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"provider", "providerId"}),
         @UniqueConstraint(columnNames = {"nickname"})
 })
 public class User {
@@ -22,32 +21,23 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String email;
-
     @Column(nullable = false, unique = true)
+    private String handle;
+
+    @Column(nullable = false)
     private String nickname;
 
     @Column(nullable = true)
     private String profileUrl;
 
-    @Column(nullable = true, length = 255)
-    private String bio;
-
     @Column(name = "phone_encrypted")
     private String phoneEncrypted;
 
-    @Column(name = "phone_search_hash", unique = true)
+    @Column(name = "phone_search_hash", unique = true, nullable = false)
     private String phoneSearchHash;
 
     @Column(name = "country_code")
     private String countryCode;
-
-    @Column(nullable = false)
-    private String provider;
-
-    @Column(nullable = false)
-    private String providerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -63,27 +53,20 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public void updateFcmToken(String fcmToken) {
-        this.fcmToken = fcmToken;
-    }
-
     @Builder
-    public User(String email, String nickname, String profileUrl, String provider, String providerId,
-                String phoneEncrypted, String phoneSearchHash, String countryCode) {
-        this.email = email;
+    public User(String handle, String nickname, String profileUrl, String phoneEncrypted, String phoneSearchHash, String countryCode) {
+        this.handle = handle;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
-        this.provider = provider;
-        this.providerId = providerId;
         this.phoneEncrypted = phoneEncrypted;
         this.phoneSearchHash = phoneSearchHash;
         this.countryCode = countryCode;
         this.status = UserStatus.ACTIVE;
     }
 
-    public void updateProfile(String nickname, String bio) {
+    public void updateProfile(String handle, String nickname) {
+        this.handle = handle;
         this.nickname = nickname;
-        this.bio = bio;
     }
 
     public void updateProfileUrl(String profileUrl) {
@@ -94,12 +77,15 @@ public class User {
         this.bluetoothToken = bluetoothToken;
     }
 
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+
     public void withdraw() {
-        this.email = null;
         this.nickname = "탈퇴한사용자_" + this.id;
         this.profileUrl = null;
-        this.bio = null;
-        this.providerId = "DELETED_" + this.providerId;
+        this.phoneEncrypted = null;
+        this.phoneSearchHash = null;
         this.status = UserStatus.DELETED;
         this.bluetoothToken = null;
         this.fcmToken = null;

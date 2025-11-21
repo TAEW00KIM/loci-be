@@ -1,22 +1,27 @@
 package com.teamloci.loci.dto;
 
 import com.teamloci.loci.domain.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class UserDto {
 
     @Getter
     @NoArgsConstructor
     public static class ProfileUpdateRequest {
-        @NotBlank(message = "닉네임을 입력해주세요.")
+
+        @Schema(description = "고유 핸들 (ID)", example = "happy_quokka")
+        @Pattern(regexp = "^[a-z0-9._]+$", message = "핸들은 영문 소문자, 숫자, 마침표(.), 밑줄(_)만 사용할 수 있습니다.")
+        private String handle;
+
+        @Schema(description = "표시 이름 (닉네임)", example = "행복한 쿼카")
         private String nickname;
-        private String bio;
     }
 
     @Getter
@@ -36,23 +41,17 @@ public class UserDto {
     @AllArgsConstructor
     public static class UserResponse {
         private Long id;
+        private String handle;
         private String nickname;
-        private String bio;
         private String profileUrl;
-        private String email;
-        private String provider;
-        private String providerId;
         private LocalDateTime createdAt;
 
         public static UserResponse from(User user) {
             return new UserResponse(
                     user.getId(),
+                    user.getHandle(),
                     user.getNickname(),
-                    user.getBio(),
                     user.getProfileUrl(),
-                    user.getEmail(),
-                    user.getProvider(),
-                    user.getProviderId(),
                     user.getCreatedAt()
             );
         }

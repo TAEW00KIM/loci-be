@@ -12,15 +12,17 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByProviderIdAndProvider(String providerId, String provider);
-    boolean existsByNickname(String nickname);
-    List<User> findByBluetoothTokenIn(List<String> tokens);
-    Optional<User> findByBluetoothToken(String bluetoothToken);
-    boolean existsByBluetoothToken(String bluetoothToken);
+    boolean existsByHandle(String handle);
+    Optional<User> findByHandle(String handle);
+
     Optional<User> findByPhoneSearchHash(String phoneSearchHash);
     List<User> findByPhoneSearchHashIn(List<String> searchHashes);
+    List<User> findByBluetoothTokenIn(List<String> tokens);
+    boolean existsByBluetoothToken(String bluetoothToken);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :userId")
     Optional<User> findByIdWithLock(@Param("userId") Long userId);
+
+    // List<User> findByHandleContainingOrNicknameContaining(String handle, String nickname);
 }

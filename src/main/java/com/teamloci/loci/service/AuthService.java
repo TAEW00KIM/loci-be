@@ -10,7 +10,6 @@ import com.teamloci.loci.dto.PhoneLoginRequest;
 import com.teamloci.loci.global.exception.CustomException;
 import com.teamloci.loci.global.exception.code.ErrorCode;
 import com.teamloci.loci.global.util.AesUtil;
-import com.teamloci.loci.global.util.RandomNicknameGenerator;
 import com.teamloci.loci.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,65 +30,74 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AesUtil aesUtil;
 
-    private static final String PHONE_PROVIDER = "phone";
     private static final SecureRandom random = new SecureRandom();
     private static final HexFormat hexFormat = HexFormat.of();
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponse loginWithPhone(PhoneLoginRequest request) {
-        String idToken = request.getIdToken();
-
-        String phoneNumber;
-        String uid;
-
-        try {
-            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
-
-            uid = decodedToken.getUid();
-            phoneNumber = (String) decodedToken.getClaims().get("phone_number");
-
-            if (!StringUtils.hasText(phoneNumber)) {
-                throw new CustomException(ErrorCode.NO_PHONE_NUMBER);
-            }
-
-        } catch (FirebaseAuthException e) {
-            log.error("Firebase 토큰 검증 실패: {}", e.getMessage());
-            throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED);
-        }
-
+        String phoneNumber = verifyFirebaseToken(request.getIdToken());
         String searchHash = aesUtil.hash(phoneNumber);
+
         Optional<User> userOptional = userRepository.findByPhoneSearchHash(searchHash);
 
-        final boolean isNewUser = userOptional.isEmpty();
-        User user;
-        if (isNewUser) {
-            String nickname = RandomNicknameGenerator.generate();
-
-            if (userRepository.existsByNickname(nickname)) {
-                nickname = nickname + "_" + uid.substring(0, 4);
-            }
-
-            user = userRepository.save(
-                    User.builder()
-                            .phoneEncrypted(aesUtil.encrypt(phoneNumber))
-                            .phoneSearchHash(searchHash)
-                            .nickname(nickname)
-                            .provider(PHONE_PROVIDER)
-                            .providerId(uid)
-                            .email(null)
-                            .build()
-            );
-        } else {
-            user = userOptional.get();
+        if (userOptional.isEmpty()) {
+            return new AuthResponse(null, true);
         }
+
+        User user = userOptional.get();
+        String accessToken = jwtTokenProvider.createAccessToken(user);
+        return new AuthResponse(accessToken, false);
+    }
+
+    @Transactional
+    public void signUpWithPhone(PhoneLoginRequest request) {
+        String idToken = request.getIdToken();
+        String inputHandle = request.getHandle();
+        String inputNickname = request.getNickname();
+
+        if (!StringUtils.hasText(inputHandle) || !StringUtils.hasText(inputNickname)) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        String phoneNumber = verifyFirebaseToken(idToken);
+        String searchHash = aesUtil.hash(phoneNumber);
+
+        if (userRepository.findByPhoneSearchHash(searchHash).isPresent()) {
+            throw new CustomException(ErrorCode.PHONE_NUMBER_ALREADY_USING);
+        }
+
+        if (userRepository.existsByHandle(inputHandle)) {
+            throw new CustomException(ErrorCode.HANDLE_DUPLICATED);
+        }
+
+        User user = userRepository.save(
+                User.builder()
+                        .phoneEncrypted(aesUtil.encrypt(phoneNumber))
+                        .phoneSearchHash(searchHash)
+                        .handle(inputHandle)
+                        .nickname(inputNickname)
+                        .build()
+        );
 
         if (user.getBluetoothToken() == null) {
             user.updateBluetoothToken(generateUniqueBluetoothToken());
         }
+    }
 
-        String accessToken = jwtTokenProvider.createAccessToken(user);
 
-        return new AuthResponse(accessToken, isNewUser);
+    private String verifyFirebaseToken(String idToken) {
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+
+            if (!StringUtils.hasText(phoneNumber)) {
+                throw new CustomException(ErrorCode.NO_PHONE_NUMBER);
+            }
+            return phoneNumber;
+        } catch (FirebaseAuthException e) {
+            log.error("Firebase 토큰 검증 실패: {}", e.getMessage());
+            throw new CustomException(ErrorCode.FIREBASE_AUTH_FAILED);
+        }
     }
 
     private String generateUniqueBluetoothToken() {
@@ -99,7 +107,6 @@ public class AuthService {
             random.nextBytes(tokenBytes);
             newToken = hexFormat.formatHex(tokenBytes);
         } while (userRepository.existsByBluetoothToken(newToken));
-
         return newToken;
     }
 }

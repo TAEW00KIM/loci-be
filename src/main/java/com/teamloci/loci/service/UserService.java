@@ -26,6 +26,10 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
+    public boolean checkHandleAvailability(String handle) {
+        return !userRepository.existsByHandle(handle);
+    }
+
     public UserDto.UserResponse getMyInfo(Long userId) {
         User user = findUserById(userId);
         return UserDto.UserResponse.from(user);
@@ -34,16 +38,24 @@ public class UserService {
     @Transactional
     public UserDto.UserResponse updateProfile(Long userId, UserDto.ProfileUpdateRequest request) {
         User user = findUserById(userId);
-        String newNickname = request.getNickname();
-        String newBio = request.getBio();
 
-        if (!user.getNickname().equals(newNickname)) {
-            if (userRepository.existsByNickname(newNickname)) {
-                throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
+        String newHandle = request.getHandle();
+        String newNickname = request.getNickname();
+
+        if (newHandle != null && !newHandle.equals(user.getHandle())) {
+            if (userRepository.existsByHandle(newHandle)) {
+                throw new CustomException(ErrorCode.HANDLE_DUPLICATED);
             }
+        } else if (newHandle == null) {
+            newHandle = user.getHandle();
         }
 
-        user.updateProfile(newNickname, newBio);
+        if (newNickname == null) {
+            newNickname = user.getNickname();
+        }
+
+        user.updateProfile(newHandle, newNickname);
+
         return UserDto.UserResponse.from(user);
     }
 
@@ -83,9 +95,5 @@ public class UserService {
     public void updateFcmToken(Long userId, UserDto.FcmTokenUpdateRequest request) {
         User user = findUserById(userId);
         user.updateFcmToken(request.getFcmToken());
-    }
-
-    public boolean checkNicknameAvailability(String nickname) {
-        return !userRepository.existsByNickname(nickname);
     }
 }

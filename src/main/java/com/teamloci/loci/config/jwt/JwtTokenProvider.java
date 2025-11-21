@@ -41,7 +41,6 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(String.valueOf(user.getId()))
-                .claim("email", user.getEmail())
                 .claim("nickname", user.getNickname())
                 .setIssuedAt(now)
                 .setExpiration(validity)
