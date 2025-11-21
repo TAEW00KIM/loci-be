@@ -25,6 +25,14 @@ public class UserDto {
     }
 
     @Getter
+    @AllArgsConstructor
+    @Schema(description = "핸들 중복 검사 응답")
+    public static class HandleCheckResponse {
+        @Schema(description = "사용 가능 여부 (true: 사용 가능, false: 중복됨)", example = "true")
+        private boolean isValidHandle;
+    }
+
+    @Getter
     @NoArgsConstructor
     public static class ProfileUrlUpdateRequest {
         private String profileUrl;

@@ -39,22 +39,27 @@ public class UserController {
         return user.getUserId();
     }
 
-    @Operation(summary = "[User] 0. 핸들(ID) 중복 검사",
-            description = "입력한 핸들(@ID)이 사용 가능한지 확인합니다. (중복이면 false, 사용 가능하면 true)")
+    @Operation(summary = "[User] 0. 핸들(ID) 중복 검사 (비로그인 가능)",
+            description = "입력한 핸들(@ID)이 사용 가능한지 확인합니다. (로그인 없이 호출 가능)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "확인 성공",
                     content = @Content(schema = @Schema(implementation = CustomResponse.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "code": "COMMON200",
-                                      "result": true
+                                      "result": {
+                                        "isValidHandle": true
+                                      }
                                     }
                                     """)))
     })
     @GetMapping("/check-handle")
-    public ResponseEntity<CustomResponse<Boolean>> checkHandle(@RequestParam String handle) {
+    public ResponseEntity<CustomResponse<UserDto.HandleCheckResponse>> checkHandle(
+            @Parameter(description = "검사할 핸들", required = true, example = "happy_quokka")
+            @RequestParam String handle
+    ) {
         boolean isAvailable = userService.checkHandleAvailability(handle);
-        return ResponseEntity.ok(CustomResponse.ok(isAvailable));
+        return ResponseEntity.ok(CustomResponse.ok(new UserDto.HandleCheckResponse(isAvailable)));
     }
 
     @Operation(summary = "[User] 1. 내 정보 조회",
